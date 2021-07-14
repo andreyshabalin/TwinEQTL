@@ -18,15 +18,17 @@ TwinMeta is a computationally efficient alternative to a linear mixed-effects mo
 5. Implemented as an easy-to-use R package similar to MatrixEQTL
 
 ## Download and document
-To install, download the package file CorrMeta_1.0.tar.gz and run (in R):
 
-```r
-install.packages("MatrixEQTL")
-install.packages("CorrMeta_1.0.tar.gz", repos = NULL, type="source")
+### Install GitHub Version
+To install `shiftR` directly from GitHub, run
+
+```
+if(!requireNamespace("devtools", quietly = TRUE))
+    install.packages("devtools")
+devtools::install_github("andreyshabalin/TwinMeta")
 ```
 
 The package includes reference manual and:
-
 
 Sample code (https://github.com/argossy/twinMeta/blob/master/CorrMeta_1.0.tar.gz)
 
