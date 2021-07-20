@@ -5,10 +5,15 @@ TwinMeta: Fast and Powerful Association Analysis for eQTL and GWAS in Twin Studi
 
 ## Introduction
 
-TwinMeta is a computationally efficient alternative to a linear mixed-effects model (LMM) for twin genome-wide association study (GWAS) or expression quantitative trait loci (eQTL) analysis. Instead of analyzing all twin samples together with LMM, TwinMeta first randomly splits twin samples into two independent groups on which multiple linear regression analysis is performed separately, followed by an appropriate meta-analysis to combine the two non-independent test results. Our approaches provide a huge leap in terms of computing performance for GWAS data with twin pairs or related subjects. 
+TwinMeta is a computationally efficient alternative to a linear mixed-effects model (LMM)
+for twin genome-wide association study (GWAS) or expression quantitative trait loci (eQTL) analyses.
+Instead of analyzing all twin samples together with LMM,
+TwinMeta first randomly splits twin samples into two independent
+groups on which multiple linear regression analysis is performed separately,
+followed by an appropriate meta-analysis to combine the two non-independent test results.
+Our approaches provide a huge leap in terms of computing performance for GWAS data with twin pairs or related subjects. 
 
 ![img](Scatter.jpg)
-
 
 ## Key features
 1. Similar to meta-analysis, only summarized SNP level test statistics are necessary
@@ -20,7 +25,7 @@ TwinMeta is a computationally efficient alternative to a linear mixed-effects mo
 ## Download and document
 
 ### Install GitHub Version
-To install `shiftR` directly from GitHub, run
+To install `TwinMeta` directly from GitHub, run
 
 ```
 if(!requireNamespace("devtools", quietly = TRUE))
@@ -33,7 +38,7 @@ The package includes reference manual, sample data and a Vignette.
 ## Basic Usage
 
 ```r
-library(CorrMeta)
+library(TwinMeta)
 
 pvThreshold = 1e-4;
 
