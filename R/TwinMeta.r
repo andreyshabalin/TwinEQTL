@@ -13,7 +13,7 @@ library(MatrixEQTL)
 	methods = list(
 		initialize = function( snps, gene, cvrt ) {
 			### Tests for consistency
-			# Done before being called by the CorrMeta_testAll
+			# Done before being called by the TwinMeta_testAll
 
 			### Initialize
 			{
@@ -174,7 +174,7 @@ library(MatrixEQTL)
 }
 
 
-CorrMeta_testAll = function(
+TwinMeta_testAll = function(
 	snps1, gene1, cvrt1,
 	snps2, gene2, cvrt2,
 	pvThreshold) {
