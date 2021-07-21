@@ -7,7 +7,7 @@ Date: 2021-07-20
 Author: Andrey A Shabalin
 Maintainer: Andrey A Shabalin <andrey.shabalin@gmail.com>
 Description: A computationally efficient alternative,
-        to a linear mixed-effects model (LMM) for twin
+        to linear mixed-effects model (LMM) for twin
         genome-wide association study (GWAS) and 
         expression quantitative trait loci (eQTL) analyses.
 License: LGPL-3
