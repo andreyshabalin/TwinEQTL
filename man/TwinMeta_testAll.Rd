@@ -7,7 +7,7 @@
 	\code{CorrMeta_testAll} function tests association of every gene and every SNP in the input data.
 	The input data must be split in two so that the samples in each group are independent.
 	The first data set is defined by (\code{snps1}, \code{gene1}, and \code{cvrt1}) and the second one by (\code{snps2}, \code{gene2}, and \code{cvrt2})
-	The input data sets must be provided in the form of \code{\link[MatrixEQTL]{SlicedData}} objects.
+	The input data sets must be provided in the form of \code{\link[MatrixEQTL]{SlicedData-class}} objects.
 }
 \usage{
 TwinMeta_testAll(
