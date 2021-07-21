@@ -40,47 +40,47 @@ The package includes reference manual, sample data and a Vignette.
 ```r
 library(TwinMeta)
 
-pvThreshold = 1e-4;
+pvThreshold = 1e-4
 
 # Location of data files
 
-data.path = paste0(find.package('TwinMeta'),'/data/');
+data.path = file.path(find.package('TwinMeta'), 'data')
 
 # Joint data set file names
 
-snps.file = paste0(data.path,'snps.txt');
-gene.file = paste0(data.path,'gene.txt');
-cvrt.file = paste0(data.path,'cvrt.txt');
+snps.file = file.path(data.path, 'snps.txt')
+gene.file = file.path(data.path, 'gene.txt')
+cvrt.file = file.path(data.path, 'cvrt.txt')
 
 # Load joint data sets
 
-snps = SlicedData$new()$LoadFile(snps.file, sliceSize = 50000);
-gene = SlicedData$new()$LoadFile(gene.file, sliceSize = 100);
-cvrt = SlicedData$new()$LoadFile(cvrt.file);
+snps = SlicedData$new()$LoadFile(snps.file, sliceSize = 1000)
+gene = SlicedData$new()$LoadFile(gene.file, sliceSize = 1000)
+cvrt = SlicedData$new()$LoadFile(cvrt.file)
 
 # Indicator for samples in set 1
 
-set1 = ((1:ncol(gene)) %% 2) == 1;
+set1 = ((1:ncol(gene)) %% 2) == 1
 
 # Create set 1 of data (odd samples), preserving original sets
 
-snps1 = snps$Clone()$ColumnSubsample(set1);
-gene1 = gene$Clone()$ColumnSubsample(set1);
-cvrt1 = cvrt$Clone()$ColumnSubsample(set1);
+snps1 = snps$Clone()$ColumnSubsample(set1)
+gene1 = gene$Clone()$ColumnSubsample(set1)
+cvrt1 = cvrt$Clone()$ColumnSubsample(set1)
 
 # Create set 2 of data (even samples), destroying original sets
 
-snps2 = snps$ColumnSubsample(!set1);
-gene2 = gene$ColumnSubsample(!set1);
-cvrt2 = cvrt$ColumnSubsample(!set1);
-rm(cvrt, gene, snps);
+snps2 = snps$ColumnSubsample(!set1)
+gene2 = gene$ColumnSubsample(!set1)
+cvrt2 = cvrt$ColumnSubsample(!set1)
+rm(cvrt, gene, snps)
 
 # Run the analysis
 
 result = TwinMeta_testAll(
-  snps1, gene1, cvrt1,
-  snps2, gene2, cvrt2,
-  pvThreshold)
+    snps1, gene1, cvrt1,
+    snps2, gene2, cvrt2,
+    pvThreshold)
 
 # Display the results
 
@@ -88,7 +88,7 @@ head(result)
 ```
 
 ## Citation
-Xia, K, Shabalin, AA ... Zou, F. TwinMeta: Fast Association Analysis for eQTL and GWAS Data with Correlated Samples. (Submitted)
+K Xia, AA Shabalin, ..., F Zou. TwinMeta: Fast Association Analysis for eQTL and GWAS Data with Correlated Samples. (Submitted)
 
 ## Contact
 Kai Xia: kxia@med.unc.edu
