@@ -44,7 +44,7 @@ pvThreshold = 1e-4;
 
 # Location of data files
 
-data.path = paste0(find.package('CorrMeta'),'/data/');
+data.path = paste0(find.package('TwinMeta'),'/data/');
 
 # Joint data set file names
 
@@ -77,7 +77,8 @@ rm(cvrt, gene, snps);
 
 # Run the analysis
 
-result = CorrMeta_testAll(snps1, gene1, cvrt1,
+result = TwinMeta_testAll(
+  snps1, gene1, cvrt1,
   snps2, gene2, cvrt2,
   pvThreshold)
 
