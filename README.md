@@ -22,9 +22,7 @@ Our approaches provide a huge leap in terms of computing performance for GWAS da
 4. Fast expression quantitative trait loci (eQTL) analysis for twin or correlated subjects
 5. Implemented as an easy-to-use R package similar to MatrixEQTL
 
-## Download and document
-
-### Install GitHub Version
+## Install GitHub Version
 To install `TwinMeta` directly from GitHub, run
 
 ```
