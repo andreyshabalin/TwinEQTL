@@ -1,4 +1,4 @@
-# twinMeta
+# TwinMeta
 TwinMeta: Fast and Powerful Association Analysis for eQTL and GWAS in Twin Studies
 
 # TwinMeta: Fast Association Analysis for eQTL and GWAS with Twin and Related Samples
