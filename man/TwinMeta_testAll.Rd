@@ -1,10 +1,10 @@
 \name{TwinMeta_testAll}
 \alias{TwinMeta_testAll}
 \title{
-	Main function for fast eQTL analysis of correlated samples in CorrMeta package.
+	Main function for fast eQTL analysis of correlated samples in TwinMeta package.
 }
 \description{
-	\code{CorrMeta_testAll} function tests association of every gene and every SNP in the input data.
+	\code{TwinMeta_testAll} function tests association of every gene and every SNP in the input data.
 	The input data must be split in two so that the samples in each group are independent.
 	The first data set is defined by (\code{snps1}, \code{gene1}, and \code{cvrt1}) and the second one by (\code{snps2}, \code{gene2}, and \code{cvrt2})
 	The input data sets must be provided in the form of \code{\link[MatrixEQTL]{SlicedData-class}} objects.
@@ -55,16 +55,16 @@ TwinMeta_testAll(
 	The package website: \url{https://github.com/andreyshabalin/TwinMeta}
 }
 \seealso{
-	The code below is the sample code for CorrMeta analysis NOT using gene/SNP locations.	
+	The code below is the sample code for TwinMeta analysis NOT using gene/SNP locations.	
 }
 \examples{
-library(CorrMeta)
+library(TwinMeta)
 
 pvThreshold = 1e-4;
 
 # Location of data files
 
-data.path = paste0(find.package('CorrMeta'),'/data/');
+data.path = paste0(find.package('TwinMeta'),'/data/');
 
 # Joint data set file names
 
