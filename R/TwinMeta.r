@@ -159,7 +159,7 @@ library(MatrixEQTL)
 			return(base::unlist(.self$list(), recursive=FALSE, use.names = FALSE));
 		},
 		show = function() {
-			cat(".listBuilder1 object.\nIternal object in MatrixEQTL package.\n");
+			cat(".listBuilder1 object.\nIternal object in TwinMeta package.\n");
 			cat("Number of elements:", .self$n, "\n");
 		}
 	)
