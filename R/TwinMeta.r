@@ -173,7 +173,7 @@ library(MatrixEQTL)
 	return(rez);
 }
 
-
+# sim = TwinMeta_simulate( Nm = 1000, Nd = 2000, Ns = 3000, Ngene = 10000, Nsnps = 100000, Ncvrt = 10);
 TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt){
 
     # Default parameters
