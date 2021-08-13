@@ -19,7 +19,7 @@
 	\item{Ncvrt}{Number of covariates.}
 }
 \value{
-	Returns a list with \code{
+	Returns a list with generated gene expression (\code{gene}), genotype (\code{snps}), and covariates (\code{cvrt}).
 }
 \author{
     Andrey A Shabalin \email{andrey.shabalin@gmail.com}
@@ -33,6 +33,7 @@
 	The code below is the sample code for CorrMeta analysis NOT using gene/SNP locations.	
 }
 \examples{
+
 library(TwinMeta)
 
 Nm = 1
@@ -46,4 +47,5 @@ Ncvrt = 1
 sim = TwinMeta_simulate(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt)
 
 show(sim)
+
 }
