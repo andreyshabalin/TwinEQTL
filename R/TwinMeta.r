@@ -635,6 +635,55 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     
     
     
+    # Preprocess set 1 (gene1, cvrt1)
+    {
+        q = qr(t(cvrt1));
+        if( min(abs(diag(qr.R(q)))) < .Machine$double.eps * ncol(cvrt1) ){
+            stop("Colinear or zero covariates detected");
+        }
+        cvrt1 = t( qr.Q(q) );
+        rm(q);
+        
+        
+        rowsq1 = rowSums(gene1^2);
+        gene1 = gene1 - tcrossprod(gene1, cvrt1) %*% cvrt1;
+        rowsq2 = rowSums(gene1^2);
+        
+        # kill rows colinear with the covariates
+        delete.rows = (rowsq2 <= rowsq1 * .Machine$double.eps );
+        if(any(delete.rows)){
+            stop('Genes colinear with covariates: ', paste0(rownames(gene1)[delete.rows], collapse = ', '))
+        }
+        gene1 = gene1 / sqrt(rowsq2);
+        rm(rowsq1, rowsq2, delete.rows);
+    }
+    
+    # Preprocess set 2 (gene2, cvrt2)
+    {
+        q = qr(t(cvrt2));
+        if( min(abs(diag(qr.R(q)))) < .Machine$double.eps * ncol(cvrt2) ){
+            stop("Colinear or zero covariates detected");
+        }
+        cvrt2 = t( qr.Q(q) );
+        rm(q);
+        
+        
+        rowsq1 = rowSums(gene2^2);
+        gene2 = gene2 - tcrossprod(gene2, cvrt2) %*% cvrt2;
+        rowsq2 = rowSums(gene2^2);
+        
+        # kill rows colinear with the covariates
+        delete.rows = (rowsq2 <= rowsq1 * .Machine$double.eps );
+        if(any(delete.rows)){
+            stop('Genes colinear with covariates: ', paste0(rownames(gene2)[delete.rows], collapse = ', '))
+        }
+        gene2 = gene2 / sqrt(rowsq2);
+        rm(rowsq1, rowsq2, delete.rows);
+    }
+    
+    
+    
+    
     
 }
 
