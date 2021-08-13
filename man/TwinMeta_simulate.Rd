@@ -19,7 +19,8 @@
 	\item{Ncvrt}{Number of covariates.}
 }
 \value{
-	Returns a list with generated gene expression (\code{gene}), genotype (\code{snps}), and covariates (\code{cvrt}).
+	Returns a list with generated gene expression (\code{gene}), genotype (\code{snps}), covariates (\code{cvrt}),
+	and data frame \code{twininfo} with information about the twin pairs in the data.
 }
 \author{
     Andrey A Shabalin \email{andrey.shabalin@gmail.com}
