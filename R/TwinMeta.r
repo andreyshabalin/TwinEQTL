@@ -624,13 +624,13 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         
         stopifnot( all(sort(c(ids1, ids2)) == 1:ncol(gene)) );
         
-        gene1 = gene[,ids1];
-        snps1 = snps[,ids1];
-        cvrt1 = cvrt[,ids1];
+        gene1 = gene[, ids1, drop = FALSE];
+        snps1 = snps[, ids1, drop = FALSE];
+        cvrt1 = cvrtM[,ids1, drop = FALSE];
         
-        gene2 = gene[,ids2];
-        snps2 = snps[,ids2];
-        cvrt2 = cvrt[,ids2];
+        gene2 = gene[, ids2, drop = FALSE];
+        snps2 = snps[, ids2, drop = FALSE];
+        cvrt2 = cvrtM[,ids2, drop = FALSE];
     } # gene1, snps1, cvrt1, gene2, snps2, cvrt2
     
     
