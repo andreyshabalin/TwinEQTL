@@ -455,9 +455,9 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     {
         # Combine and add constant element
         if( NROW(cvrt)>0 ){
-            cvrt1 = rbind(matrix(1,1,ncol(gene)), cvrt);
+            cvrtM = rbind(matrix(1,1,ncol(gene)), cvrt);
         } else {
-            cvrt1 = matrix(1,1,ncol(gene));
+            cvrtM = matrix(1,1,ncol(gene));
         }
         
         # Standardize and orthogonolize via QR decomposition
@@ -466,8 +466,8 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
             stop("Colinear or zero covariates detected");
         }
         zcvrt = t( qr.Q(q) );
-        rm(cvrt1,q);
-    } # zcvrt
+        rm(q);
+    } # cvrtM, zcvrt
     
     # Residualize gene expression data
     {
