@@ -368,8 +368,17 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt){
     return(list(gene = gene, snps = snps, cvrt = cvrt, twininfo = twininfo));
 }
 
-# gene = sim$gene; snps = sim$snps; cvrt = sim$cvrt; twininfo = sim$twininfo;
+if(FALSE){
 
+    devtools::install_github("andreyshabalin/TwinMeta@main")
+
+    library(TwinMeta);
+    set.seed(18090212+3)
+    sim = TwinMeta_simulate( Nm = 1000, Nd = 2000, Ns = 3000, Ngene = 1000, Nsnps = 1000, Ncvrt = 10);
+    gene = sim$gene; snps = sim$snps; cvrt = sim$cvrt; twininfo = sim$twininfo; pvthreshold = 0.1
+    rm(sim)
+    
+}
 TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     
     # Checks
