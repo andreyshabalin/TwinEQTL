@@ -366,7 +366,13 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt){
     return(list(gene = gene, snps = snps, cvrt = cvrt, twininfo = twininfo));
 }
 
-TwinMeta_testAll = function(
+# gene = sim$gene; snps = sim$snps; cvrt = sim$cvrt;
+
+TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
+   
+}
+
+TwinMeta_testAll_old = function(
 	snps1, gene1, cvrt1,
 	snps2, gene2, cvrt2,
 	pvThreshold){
