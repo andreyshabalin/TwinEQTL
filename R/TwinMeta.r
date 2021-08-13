@@ -366,10 +366,59 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt){
     return(list(gene = gene, snps = snps, cvrt = cvrt, twininfo = twininfo));
 }
 
-# gene = sim$gene; snps = sim$snps; cvrt = sim$cvrt;
+# gene = sim$gene; snps = sim$snps; cvrt = sim$cvrt; twininfo = sim$twininfo;
 
 TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
-   
+    
+    # Checks
+    {
+        # gene
+        stopifnot( is.matrix(gene) );
+        stopifnot( !is.null(rownames(gene)) );
+        stopifnot( !is.null(colnames(gene)) );
+        stopifnot( is.numeric(gene) );
+        stopifnot( all(is.finite(gene)) );
+        stopifnot( nrow(gene) > 0 );
+        stopifnot( ncol(gene) > 0 );
+        
+        # SNPs
+        stopifnot( is.matrix(snps) );
+        stopifnot( !is.null(rownames(snps)) );
+        stopifnot( !is.null(colnames(snps)) );
+        stopifnot( is.numeric(snps) );
+        stopifnot( all(is.finite(snps)) );
+        stopifnot( nrow(snps) > 0 );
+        stopifnot( ncol(snps) > 0 );
+        
+        # cvrt
+        if( !is.null(cvrt) ){
+            stopifnot( is.matrix(cvrt) );
+            stopifnot( !is.null(rownames(cvrt)) );
+            stopifnot( !is.null(colnames(cvrt)) );
+            stopifnot( is.numeric(cvrt) );
+            stopifnot( all(is.finite(cvrt)) );
+            
+            stopifnot( ncol(gene) == ncol(cvrt) );
+            stopifnot( all(colnames(gene) == colnames(cvrt)) );
+        }
+        
+        # columns
+        stopifnot( ncol(gene) == ncol(snps) );
+        stopifnot( all(colnames(gene) == colnames(snps)) );
+        
+        # twininfo
+        stopifnot( !any(duplicated(c(twininfo[[1]],twininfo[[2]]))) );
+        stopifnot( all(c(twininfo[[1]],twininfo[[2]]) %in% colnames(gene)) );
+        
+        stopifnot( all(twininfo[[3]] %in% c("DZ","MZ")) );
+        
+        # pvthreshold
+        stopifnot( length(pvthreshold) == 1 );
+        stopifnot( is.numeric(pvthreshold) );
+        stopifnot( is.finite(pvthreshold) );
+        stopifnot( pvthreshold > 0 );
+    }
+    
 }
 
 TwinMeta_testAll_old = function(
