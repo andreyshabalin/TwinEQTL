@@ -185,6 +185,8 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt){
         Ngene = 10000
         Nsnps = 100000
         Ncvrt = 10
+        
+        # sim = TwinMeta_simulate( Nm = 10, Nd = 10, Ns = 10, Ngene = 1000, Nsnps = 1000, Ncvrt = 10)
     }
     
     # Checks
