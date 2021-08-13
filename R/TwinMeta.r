@@ -11,7 +11,7 @@ library(MatrixEQTL)
 		zcvrt = "matrix"
 	),
 	methods = list(
-		initialize = function( snps, gene, cvrt ) {
+		initialize = function( snps, gene, cvrt ){
 			### Tests for consistency
 			# Done before being called by the TwinMeta_testAll
 
@@ -25,7 +25,7 @@ library(MatrixEQTL)
 			### Covariate Processing
 			{
 				# Combine and add constant element
-				if( cvrt$nRows()>0 ) {
+				if( cvrt$nRows()>0 ){
 					cvrt$SetNanRowMean();
 					cvrt$CombineInOneSlice();
 					cvrt = rbind(matrix(1,1,snps$nCols()),cvrt$getSlice(1));
@@ -35,7 +35,7 @@ library(MatrixEQTL)
 
 				# Standardize and orthogonolize via QR decomposition
 				q = qr(t(cvrt));
-				if( min(abs(diag(qr.R(q)))) < .Machine$double.eps * snps$nCols() ) {
+				if( min(abs(diag(qr.R(q)))) < .Machine$double.eps * snps$nCols() ){
 					stop("Colinear or zero covariates detected");
 				}
 				.self$zcvrt = t( qr.Q(q) );
@@ -45,14 +45,14 @@ library(MatrixEQTL)
 			{
 				gene$SetNanRowMean();
 				# Orthogonolize expression w.r.t. covariates
-				for( sl in 1:gene$nSlices() ) { # sl = 1L
+				for( sl in 1:gene$nSlices() ){ # sl = 1L
 					slice = gene$getSlice(sl);
 					rowsq1 = rowSums(slice^2);
 					slice = slice - tcrossprod(slice,zcvrt) %*% zcvrt;
 					rowsq2 = rowSums(slice^2);
 					# kill rows colinear with the covariates
 					delete.rows = (rowsq2 <= rowsq1 * .Machine$double.eps );
-					if(any(delete.rows)) {
+					if(any(delete.rows)){
 						slice[delete.rows,] = 0;
 						rowsq2[delete.rows] = 1;
 					}
@@ -71,14 +71,14 @@ library(MatrixEQTL)
 				snps$SetNanRowMean();
 				# Orthogonolize expression w.r.t. covariates
 				# status("Orthogonolizing expression w.r.t. covariates");
-				for( sl in 1:snps$nSlices() ) { # sl = 1L
+				for( sl in 1:snps$nSlices() ){ # sl = 1L
 					slice = snps$getSlice(sl);
 					rowsq1 = rowSums(slice^2);
 					slice = slice - tcrossprod(slice,zcvrt) %*% zcvrt;
 					rowsq2 = rowSums(slice^2);
 					# kill rows colinear with the covariates
 					delete.rows = (rowsq2 <= rowsq1 * .Machine$double.eps );
-					if(any(delete.rows)) {
+					if(any(delete.rows)){
 						slice[delete.rows,] = 0;
 						rowsq2[delete.rows] = 1;
 					}
@@ -96,15 +96,15 @@ library(MatrixEQTL)
 			.self$zsnps = snps;
 			.self$zgene = gene;
 		},
-		get_tstats = function(geneslice) {
+		get_tstats = function(geneslice){
 
 			dfFull = ncol(	zsnps ) - 1 - nrow(zcvrt);
-			testfun = function(x) { return( x * sqrt( dfFull / (1 - pmin(x^2,1))));	}
+			testfun = function(x){ return( x * sqrt( dfFull / (1 - pmin(x^2,1))));	}
 
 			gslice = zgene[[geneslice]];
 			
 			rez = vector('list',zsnps$nSlices());
-			for( sl in 1:zsnps$nSlices() ) { # sl = 1L
+			for( sl in 1:zsnps$nSlices() ){ # sl = 1L
 				rez[[sl]] = testfun(tcrossprod(gslice,zsnps[[sl]]));
 			}
 			return(rez);
@@ -119,15 +119,15 @@ library(MatrixEQTL)
 		count = 'numeric'
 	),
 	methods = list(
-		initialize = function() {
+		initialize = function(){
 			.self$dataEnv = new.env(hash = TRUE);
 			.self$n = 0L;
 			.self$count = 0;
 # 			cumlength <<- 0;
 			return(.self);
 		},
-		add = function(x) {
-			if(length(x) > 0) {
+		add = function(x){
+			if(length(x) > 0){
 				n <<- n + 1L;
 # 				cumlength <<- cumlength + length(x);
 				assign(paste(n), x, dataEnv );
@@ -135,39 +135,39 @@ library(MatrixEQTL)
 			}
 			return(.self);
 		},
-		set = function(i,x) {
+		set = function(i,x){
 			i = as.integer(i);
-			if(length(x) > 0) {
+			if(length(x) > 0){
 				if(i>n)
 					n <<- i;
 				assign(paste(i), x, dataEnv );
 			}
 			return(.self);
 		},
-		get = function(i) {
+		get = function(i){
 			return(base::get(paste(i),dataEnv));
 		},
-		list = function() {
+		list = function(){
 			if(n==0)	return(list());
 			result = vector("list",n);
-			for( i in 1:n) {
+			for( i in 1:n ){
 				result[[i]] = .self$get(i);
 			}
 			return(result);
 		},
-		unlist = function() {
+		unlist = function(){
 			return(base::unlist(.self$list(), recursive=FALSE, use.names = FALSE));
 		},
-		show = function() {
+		show = function(){
 			cat(".listBuilder1 object.\nIternal object in TwinMeta package.\n");
 			cat("Number of elements:", .self$n, "\n");
 		}
 	)
 )
 
-.SlicedDataOffsets = function(x) {
+.SlicedDataOffsets = function(x){
 	rez = integer(x$nSlices()+1);
-	for( i in 1:x$nSlices()) {
+	for( i in 1:x$nSlices()){
 		rez[i+1] = rez[i] + NROW( x$getSliceRaw(i) );
 	}
 	return(rez);
@@ -369,7 +369,7 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt){
 TwinMeta_testAll = function(
 	snps1, gene1, cvrt1,
 	snps2, gene2, cvrt2,
-	pvThreshold) {
+	pvThreshold){
 
 	gene.offsets = .SlicedDataOffsets(gene1);
 	snps.offsets = .SlicedDataOffsets(snps1);
@@ -399,7 +399,7 @@ TwinMeta_testAll = function(
 	nsnps = tail(snps.offsets,1);
 	nsamples = ncol(gene1) + ncol(gene2);
 	dfFull = nsamples - 2 - nrow(cvrt1) - nrow(cvrt2);
-# 	crthreshfun = function(pv) {
+# 	crthreshfun = function(pv){
 # 		thr = qt(pv/2, dfFull, lower.tail = FALSE);
 # 		thr = thr^2;
 # 		thr = sqrt(  thr / (dfFull + thr) );
@@ -408,12 +408,12 @@ TwinMeta_testAll = function(
 # 		return( thr );
 # 	}
 # 	crthreshold = crthreshfun(1e-5);
-	ttthreshfun = function(pv) {
+	ttthreshfun = function(pv){
 		thr = qt(pv/2, dfFull, lower.tail = FALSE);
 		return( thr );
 	}
 	ttthreshold = ttthreshfun(pvThreshold);
-	pvfun = function(x) { return( (pt(-abs(x),dfFull)*2)); }
+	pvfun = function(x){ return( (pt(-abs(x),dfFull)*2)); }
 
 	cat('Preprocessing data set 1','\n');
 	worker1 = .SingleMatrixEQTL$new(snps1, gene1, cvrt1);
@@ -428,14 +428,14 @@ TwinMeta_testAll = function(
 	
 		tic = proc.time();
 	
-		for( gsl in 1:gene1$nSlices() ) { # gsl = 1
+		for( gsl in 1:gene1$nSlices() ){ # gsl = 1
 			# cat( ssl, 'of', snps1$nSlices(), '\n');
 		 	
 			tt1 = worker1$get_tstats(gsl);
 			tt2 = worker2$get_tstats(gsl);
 			
 			sum1 = sum2 = sum11 = sum22 = sum12 = 0;
-			for( ssl in seq_along(tt1) ) { # ssl = 1
+			for( ssl in seq_along(tt1) ){ # ssl = 1
 				sum1  = sum1  + rowSums(tt1[[ssl]])
 				sum2  = sum2  + rowSums(tt2[[ssl]])
 				sum11 = sum11 + rowSums(tt1[[ssl]]^2)
@@ -447,10 +447,10 @@ TwinMeta_testAll = function(
 			### Rows - genes (slice gsl)
 			### Columns - snps (slice ssl)
 
-			for( ssl in seq_along(tt1)) { # sl=1
+			for( ssl in seq_along(tt1)){ # sl=1
 				tt = (tt1[[ssl]]+tt2[[ssl]])/sqrt(2+2*crosscor);
 				selected = which(abs(tt) > ttthreshold, arr.ind = TRUE, useNames=FALSE);
-				if(NROW(selected)>0) {
+				if(NROW(selected)>0){
 					collect.geneid$add(selected[,1] + gene.offsets[ssl]);
 					collect.snpsid$add(selected[,2] + snps.offsets[ssl]);
 					collect.tvalue$add(tt[selected]);
