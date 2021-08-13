@@ -173,7 +173,6 @@ library(MatrixEQTL)
 	return(rez);
 }
 
-# sim = TwinMeta_simulate( Nm = 1000, Nd = 2000, Ns = 3000, Ngene = 10000, Nsnps = 100000, Ncvrt = 10);
 TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt){
 
     # Default parameters
@@ -429,6 +428,146 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         stopifnot( is.finite(pvthreshold) );
         stopifnot( pvthreshold > 0 );
     }
+    
+    # Process twininfo
+    {
+        twininfo1 = match(twininfo[[1]], colnames(gene))
+        twininfo2 = match(twininfo[[2]], colnames(gene))
+        
+        MZset = which(twininfo[[3]] == "MZ");
+        idsMZ1 = twininfo1[MZset];
+        idsMZ2 = twininfo2[MZset];
+        
+        DZset = which(twininfo[[3]] == "DZ");
+        idsDZ1 = twininfo1[DZset];
+        idsDZ2 = twininfo2[DZset];
+        
+        idsS = 1:ncol(gene)
+        idsS = idsS[!(idsS %in% c(idsMZ1,idsMZ2,idsDZ1,idsDZ2))];
+        
+        Nm = length(MZset);
+        Nd = length(DZset);
+        N = ncol(gene)
+        rm(twininfo1, twininfo2, MZset, DZset);
+    } # idsMZ1, idsMZ2, idsDZ1, idsDZ2, Nm, Nd, N
+    
+    # Perform ACE model estimation, using SqD method
+    {
+        # Get mean squares
+        {
+            Rm = rowMeans((gene[,idsMZ1] - gene[,idsMZ2])^2)/2; # var of MZ pair differences / 2
+            Rd = rowMeans((gene[,idsDZ1] - gene[,idsDZ2])^2)/2; # var of DZ pair differences / 2
+            Ra = rowMeans(gene^2);
+            
+            # head(cbind(Rm, Rd, Ra))
+        } # Rm, Rd, Ra
+        
+        acelist = vector('list', 4);
+        
+        # Estimate model with A,C,E all included
+        {
+            # Full model
+            #             2*E = c(0,0,2) %*% rez = Rm
+            #   A       + 2*E = c(1,0,2) %*% rez = Rd
+            # 2*A + 2*C + 2*E = c(2,2,2) %*% rez = Ra
+            
+            # mat = matrix(nrow = 3, ncol = 3, data = c(
+            #   c(0,0,2),
+            #   c(1,0,2),
+            #   c(2,2,2)))
+            
+            acelist[[1]] = cbind(
+                A = 2 * (Rd - Rm),
+                C = Rm + Ra - 2 * Rd,
+                E = Rm);
+
+            # head(round(acelist[[1]],1))
+        } # acelist[[1]]
+        
+        # Estimate model with C,E included
+        {
+            #       2*E = c(0,2) %*% rez = 2 * Rm
+            #       2*E = c(0,2) %*% rez = 2 * Rd
+            # 2*C + 2*E = c(2,2) %*% rez = 2 * Ra
+            
+            #       2*E = c(0,2) %*% rez = 2 * (Rm*Nmz + Rd*Ndz) / (Nmz + Ndz)
+            # 2*C + 2*E = c(2,2) %*% rez = 2 * Ra
+            
+            R2 = (Rm * Nm + Rd * Nd) / (Nm + Nd);
+            acelist[[2]] = cbind(
+                A = 0,
+                C = Ra - R2,
+                E = R2);
+            rm(R2);
+            
+            # head(round(acelist[[2]],1));
+        } # acelist[[2]]
+        
+        # Estimate model with A,E included (approximate, very close)
+        {
+            #       2*E = c(0,2) %*% rez = 2 * Rm
+            #   A + 2*E = c(1,2) %*% rez = 2 * Rd
+            # 2*A + 2*E = c(2,2) %*% rez = 2 * Ra
+            
+            # weighted regression
+            tmpA = 2 * ((Ra - Rd)*Nd + (Ra - Rm)*Nm*2) / (Nd + Nm*4);
+            acelist[[3]] = cbind(
+                A = tmpA,
+                C = 0,
+                E = Ra - tmpA);
+            rm(tmpA);
+            
+            # head(round(acelist[[3]],1));
+        } # acelist[[3]]
+        
+        # Estimate model with E only
+        {
+            acelist[[4]] = cbind(
+                A = 0,
+                C = 0,
+                E = Ra);
+            # head(round(acelist[[4]],1));
+        } # acelist[[4]]
+        
+        # Select best model for each gene
+        {
+            # weights from ACE parameters to 2*c(Rm, Rd, Ra)
+            ace2rrr = matrix(nrow = 3, ncol = 3, data = c(
+                c(0,0,2),
+                c(1,0,2),
+                c(2,2,2)));
+            
+            # best group averages
+            bstmean = 2 * cbind(Rm, Rd, Ra);
+            
+            
+            bestace = matrix(NA_real_, nrow = nrow(gene), ncol = 3);
+            bestmft = rep(+Inf, nrow(gene));
+            
+            for( i in seq_along(acelist) ){ # i = 1;
+                
+                # Current model estimates
+                ace = acelist[[i]];
+                
+                # calculate the misfit (SSE for the model - SSE of best fit).
+                mft = (ace %*% ace2rrr - bstmean)^2 %*% c(Nm, Nd, (N^2 - N)/2 - Nm - Nd);
+                mft[rowSums(ace<0) > 0L] = +Inf;
+                
+                set = which(mft < bestmft);
+                if(length(set)>0){
+                    bestace[set,] = ace[set,];
+                    bestmft[set ] = mft[set ];
+                }
+                rm(ace, set, mft);
+            }
+            rm(i);
+            rm(ace2rrr, bstmean, bestmft);
+        }
+        
+        # cleanup
+        rm(acelist);
+        rm(Rm, Rd, Ra);
+    } # bestace
     
 }
 
