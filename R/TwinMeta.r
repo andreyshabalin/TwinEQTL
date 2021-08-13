@@ -375,7 +375,7 @@ if(FALSE){
     set.seed(18090212+3)
     sim = TwinMeta_simulate( Nm = 1000, Nd = 2000, Ns = 3000, Ngene = 1000, Nsnps = 1000, Ncvrt = 10);
     gene = sim$gene; snps = sim$snps; cvrt = sim$cvrt; twininfo = sim$twininfo; pvthreshold = 0.1
-    rm(sim)
+    # rm(sim)
     
 }
 TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
@@ -450,6 +450,41 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         N = ncol(gene)
         rm(twininfo1, twininfo2, MZset, DZset);
     } # idsMZ1, idsMZ2, idsDZ1, idsDZ2, Nm, Nd, N
+    
+    # Process covariates
+    {
+        # Combine and add constant element
+        if( NROW(cvrt)>0 ){
+            cvrt1 = rbind(matrix(1,1,ncol(gene)), cvrt);
+        } else {
+            cvrt1 = matrix(1,1,ncol(gene));
+        }
+        
+        # Standardize and orthogonolize via QR decomposition
+        q = qr(t(cvrt));
+        if( min(abs(diag(qr.R(q)))) < .Machine$double.eps * ncol(gene) ){
+            stop("Colinear or zero covariates detected");
+        }
+        zcvrt = t( qr.Q(q) );
+        rm(cvrt1,q);
+    } # zcvrt
+    
+    # Residualize gene expression data
+    {
+        rowsq1 = rowSums(gene^2);
+        gene = gene - tcrossprod(gene, zcvrt) %*% zcvrt;
+        rowsq2 = rowSums(gene^2);
+        
+        # kill rows colinear with the covariates
+        delete.rows = (rowsq2 <= rowsq1 * .Machine$double.eps );
+        if(any(delete.rows)){
+            stop('Genes colinear with covariates: ', paste0(rownames(gene)[delete.rows], collapse = ', '))
+        }
+        gene = gene / sqrt(rowsq2);
+        
+        rm(rowsq1, rowsq2, delete.rows);
+        rm(zcvrt);
+    } # gene
     
     # Perform ACE model estimation, using SqD method
     {
