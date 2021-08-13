@@ -604,6 +604,38 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         rm(Rm, Rd, Ra);
     } # bestace
     
+    # Split the samples into 2 groups, each without related individuals
+    {
+        # split the data (Avoid R stupidity with ifs
+        if( length(idsS) == 0 ){
+            idsS1 = c();
+            idsS2 = c();
+        } else if( length(idsS) == 1 ){
+            idsS1 = idsS;
+            idsS2 = c();
+        } else {
+            idsS1 = idsS[seq(from = 1, to = length(idsS), by = 2)];
+            idsS2 = idsS[seq(from = 2, to = length(idsS), by = 2)];
+        }
+        
+        ids1 = c(idsMZ1, idsDZ1, idsS1);
+        ids2 = c(idsMZ2, idsDZ2, idsS2);
+        rm(idsS1, idsS2);
+        
+        stopifnot( all(sort(c(ids1, ids2)) == 1:ncol(gene)) );
+        
+        gene1 = gene[,ids1];
+        snps1 = snps[,ids1];
+        cvrt1 = cvrt[,ids1];
+        
+        gene2 = gene[,ids2];
+        snps2 = snps[,ids2];
+        cvrt2 = cvrt[,ids2];
+    } # gene1, snps1, cvrt1, gene2, snps2, cvrt2
+    
+    
+    
+    
 }
 
 TwinMeta_testAll_old = function(
