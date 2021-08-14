@@ -472,7 +472,7 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         rm(q);
     } # cvrtM, zcvrt
     
-    # Residualize gene expression data
+    # Residualize and standardize gene expression data
     {
         rowsq1 = rowSums(gene^2);
         gene = gene - tcrossprod(gene, zcvrt) %*% zcvrt;
