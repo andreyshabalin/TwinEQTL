@@ -14,7 +14,8 @@ library(MatrixEQTL)
 
 .pv.nz = function(x){return( .my.pmax(x, .Machine$double.xmin) )}
 
-.listBuilder1 = setRefClass(".listBuilder1",
+# Accumulate the results in slices of a data frame
+.listBuilder = setRefClass(".listBuilder",
 	fields = list(
 		dataEnv = "environment",
 		n = "integer",
