@@ -619,7 +619,12 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
             absthr[pvthreshold >= 1] = 0;
             absthr[pvthreshold <= 0] = Inf;
 
-        } # dfFull1, testfn1, dfFull2, testfn2, absthr
+            # Get p-value from abs(z)
+            pvfun = function(absz){
+                return( .pv.nz(pnorm(absz,lower.tail = FALSE)*2));
+            }
+            
+        } # dfFull1, testfn1, dfFull2, testfn2, absthr, pvfun
         
         
         
