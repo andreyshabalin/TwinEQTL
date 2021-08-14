@@ -695,10 +695,17 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
                 # qqnorm(as.vector(zstat))
             } # zstat
             
-
-            
-            
-            
+            # Select z-stats exceeding threshold, record them in collect*
+            {
+                selected = which(abszz > absthr, arr.ind = TRUE, useNames = FALSE);
+                if( length(selected) > 0 ){
+                    collect.geneid$add(selected[,1]);
+                    collect.snpsid$add(selected[,2] + (fr - 1L));
+                    collect.zscore$add(zstat[selected]);
+                    collect.pvalue$add(pvfun(abszz[selected]));
+                }
+                rm(selected);
+            }
         }
         rm(part, blocksize, Nsnps, nsteps, fr, to);
         
