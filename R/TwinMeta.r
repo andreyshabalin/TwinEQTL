@@ -603,6 +603,14 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         rm(rowsq1, rowsq2, delete.rows);
     }
     
+    # Create .listBuilder objects to collect results
+    {
+        collect.geneid = new('.listBuilder');
+        collect.snpsid = new('.listBuilder');
+        collect.zscore = new('.listBuilder');
+        collect.pvalue = new('.listBuilder');
+    } # collect.geneid, collect.snpsid, collect.zscore, collect.pvalue
+
     # Loop over SNPs, in blocks
     {
         # Functions consistent through the loop
