@@ -711,6 +711,27 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         rm(part, blocksize, Nsnps, nsteps, fr, to);
         rm(dfFull1, testfn1, dfFull2, testfn2, absthr, pvfun)
     } # collect*
+    
+    # Form the resulting data frame
+    {
+        # gene names factor
+        gene.factor = collect.geneid$unlist();
+        levels(gene.factor) = rownames(gene);
+        class(gene.factor) = 'factor';
+        
+        # SNPs names factor
+        snps.factor = collect.snpsid$unlist();
+        levels(snps.factor) = rownames(snps);
+        class(snps.factor) = 'factor';
+        
+        results = data.frame( 
+            gene = gene.factor,
+            snps = snps.factor,
+            zscore = collect.zscore$unlist(),
+            pvalue = collect.pvalue$unlist());
+    } # results
+    
+    return(results);
 }
 
 TwinMeta_testAll_old = function(
