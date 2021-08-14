@@ -635,13 +635,11 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
             
         } # dfFull1, testfn1, dfFull2, testfn2, absthr, pvfun
         
-        
-        
-        blocksize = 1024/8;
+        blocksize = 1024L %/% 8L;
         Nsnps = nrow(snps1);
         nsteps = ceiling(Nsnps/blocksize);
-        for( part in seq_len(nsteps) ){ # part = 1
-            fr = (part-1)*blocksize + 1;
+        for( part in seq_len(nsteps) ){ # part = 1L
+            fr = (part-1L)*blocksize + 1L;
             to = min(part*blocksize, Nsnps);
             message('Testing SNPs ', fr, ' - ', to);
             
