@@ -359,10 +359,13 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt){
         message("Cvrt: Done generating covariates") 
     }
     
-    twininfo = data.frame(
-        first  = colnames(gene)[c(idsMZ1,idsDZ1)],
-        second = colnames(gene)[c(idsMZ2,idsDZ2)],
-        type = rep(c("MZ","DZ"), c(Nm, Nd)));
+    # Generate twininfo
+    {
+        twininfo = data.frame(
+            first  = colnames(gene)[c(idsMZ1,idsDZ1)],
+            second = colnames(gene)[c(idsMZ2,idsDZ2)],
+            type = rep(c("MZ","DZ"), c(Nm, Nd)));
+    } # twininfo
     
     return(list(gene = gene, snps = snps, cvrt = cvrt, twininfo = twininfo));
 }
