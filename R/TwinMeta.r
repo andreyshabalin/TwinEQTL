@@ -3,6 +3,17 @@ library(MatrixEQTL)
 ### Format a number with comma delimited thousands
 .s = function(x)formatC(x=x,digits=ceiling(log10(max(x)+1)),big.mark=',',big.interval=3);
 
+.my.pmax = function(x, val){
+    # minimum "pmin" function that can handle empty array
+    if(length(x) == 0){
+        return(x)
+    } else {
+        return(pmax.int(x,val));
+    }    
+}
+
+.pv.nz = function(x){return( .my.pmax(x, .Machine$double.xmin) )}
+
 .listBuilder1 = setRefClass(".listBuilder1",
 	fields = list(
 		dataEnv = "environment",
