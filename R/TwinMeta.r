@@ -704,12 +704,20 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     {
         # Functions consistent through the loop
         {
+            # Correlation to t-statistic for slice1
             dfFull1 = ncol(	gene1 ) - 1 - nrow(cvrt1);
             testfn1 = function(x){ return( x * sqrt( dfFull1 / (1 - pmin(x^2,1)))); }
             
+            # Correlation to t-statistic for slice2
             dfFull2 = ncol(	gene2 ) - 1 - nrow(cvrt2);
             testfn2 = function(x){ return( x * sqrt( dfFull2 / (1 - pmin(x^2,1)))); }
-        } # dfFull1, testfn1, dfFull2, testfn2
+            
+            # Threshold for abs(z)
+            absthr =  qnorm(pvthreshold/2, lower.tail = FALSE);
+            absthr[pvthreshold >= 1] = 0;
+            absthr[pvthreshold <= 0] = Inf;
+
+        } # dfFull1, testfn1, dfFull2, testfn2, absthr
         
         
         
