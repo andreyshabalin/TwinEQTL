@@ -706,11 +706,11 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
                 }
                 rm(selected);
             }
+            rm(slice1, slice2, zstat, abszz)
         }
         rm(part, blocksize, Nsnps, nsteps, fr, to);
-        
-        
-    }
+        rm(dfFull1, testfn1, dfFull2, testfn2, absthr, pvfun)
+    } # collect*
 }
 
 TwinMeta_testAll_old = function(
