@@ -698,10 +698,88 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         rm(rowsq1, rowsq2, delete.rows);
     }
     
-    
-    
-    
-    
+    # Loop over SNPs, in blocks
+    {
+        # Functions consistent through the loop
+        {
+            dfFull1 = ncol(	gene1 ) - 1 - nrow(cvrt1);
+            testfn1 = function(x){ return( x * sqrt( dfFull1 / (1 - pmin(x^2,1)))); }
+            
+            dfFull2 = ncol(	gene2 ) - 1 - nrow(cvrt2);
+            testfn2 = function(x){ return( x * sqrt( dfFull2 / (1 - pmin(x^2,1)))); }
+        } # dfFull1, testfn1, dfFull2, testfn2
+        
+        
+        
+        blocksize = 1024/8;
+        Nsnps = nrow(snps1);
+        nsteps = ceiling(Nsnps/blocksize);
+        for( part in seq_len(nsteps) ){ # part = 1
+            fr = (part-1)*blocksize + 1;
+            to = min(part*blocksize, Nsnps);
+            message('Testing SNPs ', fr, ' - ', to);
+            
+            
+            # Extract SNP slices
+            {
+                slice1 = snps1[fr:to, , drop = FALSE];
+                slice2 = snps2[fr:to, , drop = FALSE];
+            } # slice1, slice2
+            
+            # Residualize and standardize slice1
+            {
+                rowsq1 = rowSums(slice1^2);
+                slice1 = slice1 - tcrossprod(slice1, cvrt1) %*% cvrt1;
+                rowsq2 = rowSums(slice1^2);
+                
+                # kill rows colinear with the covariates
+                delete.rows = (rowsq2 <= rowsq1 * .Machine$double.eps );
+                if(any(delete.rows)){
+                    slice1[delete.rows,] = 0;
+                    rowsq2[delete.rows] = 1;
+                }
+                slice1 = slice1 / sqrt(rowsq2);
+                
+                rm(rowsq1, rowsq2, delete.rows);
+            } # slice1
+            
+            # Residualize and standardize slice2
+            {
+                rowsq1 = rowSums(slice2^2);
+                slice2 = slice2 - tcrossprod(slice2, cvrt1) %*% cvrt1;
+                rowsq2 = rowSums(slice2^2);
+                
+                # kill rows colinear with the covariates
+                delete.rows = (rowsq2 <= rowsq1 * .Machine$double.eps );
+                if(any(delete.rows)){
+                    slice2[delete.rows,] = 0;
+                    rowsq2[delete.rows] = 1;
+                }
+                slice2 = slice2 / sqrt(rowsq2);
+                
+                rm(rowsq1, rowsq2, delete.rows);
+            } # slice2
+            
+            # Getting t-statistics for slice1, slice2, combining them
+            {
+                tt1 = testfn1(tcrossprod(gene1,slice1));
+                tt2 = testfn2(tcrossprod(gene2,slice2));
+                
+                zstat = (tt1 + tt2) * ttmultiplier;
+                
+                dim(tt1);
+                dim(tt2);
+            } # zstat
+            
+
+            
+            
+            
+        }
+        rm(part, blocksize, Nsnps, nsteps, fr, to);
+        
+        
+    }
 }
 
 TwinMeta_testAll_old = function(
