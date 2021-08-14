@@ -690,9 +690,9 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
                 tt2 = testfn2(tcrossprod(gene2,slice2));
                 
                 zstat = (tt1 + tt2) * ttmultiplier;
-                
-                dim(tt1);
-                dim(tt2);
+                abszz = abs(zstat);
+                rm(tt1,tt2);
+                # qqnorm(as.vector(zstat))
             } # zstat
             
 
