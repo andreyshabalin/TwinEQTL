@@ -703,6 +703,11 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         
         # gene names factor
         gene.factor = unlist(collect.geneid, recursive = FALSE, use.names = FALSE);
+        if( length(gene.factor) == 0 ){
+            # message('No significant associations found at pvthreshold = ', pvthreshold);
+            warning('No significant associations found at pvthreshold = ', pvthreshold);
+            return(data.frame(gene = character(), snps = character(), zscore = numeric(0), pvalue = numeric(0)));
+        }
         levels(gene.factor) = rownames(gene);
         class(gene.factor) = 'factor';
         
