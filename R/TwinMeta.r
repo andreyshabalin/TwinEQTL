@@ -326,11 +326,11 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt){
         
         message("SNPs: Generating Allele 1 with given MAF");
         A1 = matrix(NA_integer_, Nsnps, N);
-        A1[,-c(idsMZ2,idsDZ2)] = as.integer(runif(Nsnps*(N - Nm - Nd)) < maf);
+        A1[,-c(idsMZ2,idsDZ2)] = as.integer(runif(Nsnps * as.numeric(N - Nm - Nd)) < maf);
 
         message("SNPs: Generating Allele 2 with given MAF");
         A2 = matrix(NA_integer_, Nsnps, N);
-        A2[,-idsMZ2] = as.integer(runif(Nsnps*(N - Nm)) < maf);
+        A2[,-idsMZ2] = as.integer(runif(Nsnps * as.numeric(N - Nm)) < maf);
         
         # system.time({ A1 = rbinom(Nsnps*N, size = 1, prob = maf); dim(A1) = c(Nsnps, N); })
         # system.time({ A1 = as.integer(runif(Nsnps*N) < maf); dim(A1) = c(Nsnps, N); })
