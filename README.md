@@ -66,8 +66,8 @@ pvthreshold = 1000 / (Ngene * Nsnps)
 eqtls = TwinMeta_testAll(
     gene = sim$gene,
     snps = sim$snps,
-    cvrt= sim$cvrt,
-    twininfo= sim$twininfo,
+    cvrt = sim$cvrt,
+    twininfo = sim$twininfo,
     pvthreshold = pvthreshold)
 
 # Display the results
