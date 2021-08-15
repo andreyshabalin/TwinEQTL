@@ -17,7 +17,8 @@ library(MatrixEQTL)
     }    
 }
 
-.pv.nz = function(x){return( .my.pmax(x, .Machine$double.xmin) )}
+# Avoid creating zero p-values
+.pv.nz = function(x){ .my.pmax(x, .Machine$double.xmin) }
 
 # Accumulate the results in slices of a data frame
 .listBuilder = setRefClass(".listBuilder",
