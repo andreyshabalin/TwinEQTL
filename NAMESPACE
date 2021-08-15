@@ -1,8 +1,3 @@
-importFrom(methods, setRefClass)
 exportPattern("^[[:alpha:]]+")
 
-importFrom("methods", "new")
-importFrom("stats", "complete.cases", "pf", "pt", "qf", "qt")
-importFrom("utils", "flush.console", "tail")
-importFrom("MatrixEQTL", "rownames", "ncol", "nrow")
-importClassesFrom("MatrixEQTL", "SlicedData")
+importFrom("stats", "pnorm", "qnorm", "rnorm", "runif")

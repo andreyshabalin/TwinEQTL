@@ -3,7 +3,7 @@ Type: Package
 Title: TwinMeta: Fast and Powerful Association Analysis 
         for eQTL and GWAS in Twin Studies
 Version: 1.1
-Date: 2021-07-20
+Date: 2021-08-15
 Author: Andrey A Shabalin
 Maintainer: Andrey A Shabalin <andrey.shabalin@gmail.com>
 Description: A computationally efficient alternative,
@@ -13,5 +13,5 @@ Description: A computationally efficient alternative,
 License: LGPL-3
 LazyLoad: yes
 URL: https://github.com/andreyshabalin/TwinMeta
-Depends: R (>= 2.12.0), MatrixEQTL, methods, utils, stats
+Depends: R (>= 2.12.0), utils, stats
 NeedsCompilation: no

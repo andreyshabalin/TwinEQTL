@@ -1,5 +1,3 @@
-library(MatrixEQTL)
-
 ### Format a number with comma delimited thousands
 .s = function(x){
     formatC(x = x, 
