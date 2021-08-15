@@ -8,12 +8,12 @@ library(MatrixEQTL)
             big.interval = 3)
 }
 
+# "pmax" function that can handle empty array
 .my.pmax = function(x, val){
-    # minimum "pmin" function that can handle empty array
-    if(length(x) == 0){
+    if( length(x) == 0 ){
         return(x)
     } else {
-        return(pmax.int(x,val));
+        return(pmax.int(x, val));
     }    
 }
 
