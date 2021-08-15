@@ -38,8 +38,6 @@ The package includes reference manual, sample data and a Vignette.
 ```r
 library(TwinMeta)
 
-# Generate artificial data set 
-
 # Number of MZ twin pairs
 Nm = 1000
 
