@@ -13,8 +13,6 @@ groups on which multiple linear regression analysis is performed separately,
 followed by an appropriate meta-analysis to combine the two non-independent test results.
 Our approaches provide a huge leap in terms of computing performance for GWAS data with twin pairs or related subjects. 
 
-![img](Scatter.jpg)
-
 ## Key features
 1. Similar to meta-analysis, only summarized SNP level test statistics are necessary
 2. Fast alternative to linear mixed effect model with no inflation of type I error and negligible power loss
