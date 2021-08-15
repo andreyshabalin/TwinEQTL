@@ -225,12 +225,18 @@ if(FALSE){
     library(TwinMeta);
     set.seed(18090212+3)
     sim = TwinMeta_simulate( Nm = 1000, Nd = 2000, Ns = 3000, Ngene = 1000, Nsnps = 1000, Ncvrt = 10);
-    gene = sim$gene; snps = sim$snps; cvrt = sim$cvrt; twininfo = sim$twininfo; pvthreshold = 1000 / (nrow(snps)*nrow(gene))
+    # gene = sim$gene; snps = sim$snps; cvrt = sim$cvrt; twininfo = sim$twininfo; 
+    pvthreshold = 1000 / (nrow(snps)*nrow(gene))
     # rm(sim)
     
     {
         tic = proc.time();
-        results = TwinMeta_testAll(gene, snps, cvrt, twininfo, pvthreshold);
+        results = TwinMeta_testAll(
+            gene = sim$gene,
+            snps = sim$snps,
+            cvrt= sim$cvrt,
+            twininfo= sim$twininfo,
+            pvthreshold = pvthreshold);
         toc = proc.time();
         show(toc - tic);
     }

@@ -28,7 +28,7 @@ To install `TwinMeta` directly from GitHub, run
 ```
 if(!requireNamespace("devtools", quietly = TRUE))
     install.packages("devtools")
-devtools::install_github("andreyshabalin/TwinMeta")
+devtools::install_github("andreyshabalin/TwinMeta@main")
 ```
 
 The package includes reference manual, sample data and a Vignette.
@@ -62,10 +62,15 @@ Ncvrt = 10
 sim = TwinMeta_simulate( Nm, Nd, Ns, Ngene, Nsnps, Ncvrt);
 
 # Pick a p-value threshold
-pvThreshold = 1000 / (Ngene * Nsnps)
+pvthreshold = 1000 / (Ngene * Nsnps)
 
 # Run eQTL analysis on the data with twins
-eqtls = TwinMeta_testAll(gene, snps, cvrt, twininfo, pvthreshold);
+eqtls = TwinMeta_testAll(
+    gene = sim$gene,
+    snps = sim$snps,
+    cvrt= sim$cvrt,
+    twininfo= sim$twininfo,
+    pvthreshold = pvthreshold)
 
 # Display the results
 head(eqtls)
