@@ -372,8 +372,8 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         
         # Get mean squares
         {
-            Rm = rowMeans((gene[,idsMZ1] - gene[,idsMZ2])^2)/2; # var of MZ pair differences / 2
-            Rd = rowMeans((gene[,idsDZ1] - gene[,idsDZ2])^2)/2; # var of DZ pair differences / 2
+            Rm = rowMeans((gene[,idsMZ1, drop = FALSE] - gene[,idsMZ2, drop = FALSE])^2)/2; # var of MZ pair differences / 2
+            Rd = rowMeans((gene[,idsDZ1, drop = FALSE] - gene[,idsDZ2, drop = FALSE])^2)/2; # var of DZ pair differences / 2
             Ra = rowMeans(gene^2);
             
             # head(cbind(Rm, Rd, Ra))
