@@ -18,6 +18,179 @@
 # Avoid creating zero p-values
 .pv.nz = function(x){ .my.pmax(x, .Machine$double.xmin) }
 
+# Orthogonalize and normalize covariates
+.orthonormalizeCovariates = function(cvrt, gene){
+    # Combine and add constant element
+    if( NROW(cvrt) > 0 ){
+        cvrtM = rbind(matrix(1,1,ncol(gene)), cvrt);
+    } else {
+        cvrtM = matrix(1,1,ncol(gene));
+    }
+    
+    # Standardize and orthogonolize via QR decomposition
+    q = qr(t(cvrtM));
+    if( min(abs(diag(qr.R(q)))) < .Machine$double.eps * ncol(gene) ){
+        stop("Colinear or zero covariates detected");
+    }
+    zcvrt = t( qr.Q(q) );
+    rm(q);
+    
+    return(zcvrt);
+}
+
+# Residualize the gene expression or genotype matrix
+.ResidualizeSlice = function(slice, zcvrt){
+    rowsq1 = rowSums(slice^2);
+    slice = slice - tcrossprod(slice, zcvrt) %*% zcvrt;
+    rowsq2 = rowSums(slice^2);
+    
+    # kill rows colinear with the covariates
+    delete.rows = (rowsq2 <= rowsq1 * .Machine$double.eps);
+    if(any(delete.rows)){
+        slice[delete.rows,] = 0;
+        rowsq2[delete.rows] = 1;
+    }
+    slice = slice / sqrt(rowsq2);
+    
+    rm(rowsq1, rowsq2, delete.rows);
+    return(slice);
+}
+
+.EstimateACE = function(gene, cvrt, idsMZ1, idsMZ2, idsDZ1, idsDZ2, N){
+    
+    Nm = length(idsMZ1);
+    Nd = length(idsDZ1);
+    
+    # Residualize and standardize gene expression data
+    {
+        message("Orthonormalizing covariates");
+        zcvrt = .orthonormalizeCovariates(cvrt, gene);
+        
+        message("Residualizing gene expression data");
+        gene = .ResidualizeSlice(gene, zcvrt);
+        
+        rm(zcvrt);
+    } # gene, -zcvrt
+    
+    message("Estimating ACE model for each gene") 
+    
+    # Get mean squares
+    {
+        Rm = rowMeans((gene[,idsMZ1, drop = FALSE] - gene[,idsMZ2, drop = FALSE])^2)/2; # var of MZ pair differences / 2
+        Rd = rowMeans((gene[,idsDZ1, drop = FALSE] - gene[,idsDZ2, drop = FALSE])^2)/2; # var of DZ pair differences / 2
+        Ra = rowMeans(gene^2);
+        
+        # head(cbind(Rm, Rd, Ra))
+    } # Rm, Rd, Ra
+    
+    acelist = vector('list', 4);
+    
+    # Estimate model with A,C,E all included
+    {
+        # Full model
+        #             2*E = c(0,0,2) %*% rez = Rm
+        #   A       + 2*E = c(1,0,2) %*% rez = Rd
+        # 2*A + 2*C + 2*E = c(2,2,2) %*% rez = Ra
+        
+        # mat = matrix(nrow = 3, ncol = 3, data = c(
+        #   c(0,0,2),
+        #   c(1,0,2),
+        #   c(2,2,2)))
+        
+        acelist[[1]] = cbind(
+            A = 2 * (Rd - Rm),
+            C = Rm + Ra - 2 * Rd,
+            E = Rm);
+        
+        # head(round(acelist[[1]],1))
+    } # acelist[[1]]
+    
+    # Estimate model with C,E included
+    {
+        #       2*E = c(0,2) %*% rez = 2 * Rm
+        #       2*E = c(0,2) %*% rez = 2 * Rd
+        # 2*C + 2*E = c(2,2) %*% rez = 2 * Ra
+        
+        #       2*E = c(0,2) %*% rez = 2 * (Rm*Nmz + Rd*Ndz) / (Nmz + Ndz)
+        # 2*C + 2*E = c(2,2) %*% rez = 2 * Ra
+        
+        R2 = (Rm * Nm + Rd * Nd) / (Nm + Nd);
+        acelist[[2]] = cbind(
+            A = 0,
+            C = Ra - R2,
+            E = R2);
+        rm(R2);
+        
+        # head(round(acelist[[2]],1));
+    } # acelist[[2]]
+    
+    # Estimate model with A,E included (approximate, very close)
+    {
+        #       2*E = c(0,2) %*% rez = 2 * Rm
+        #   A + 2*E = c(1,2) %*% rez = 2 * Rd
+        # 2*A + 2*E = c(2,2) %*% rez = 2 * Ra
+        
+        # weighted regression
+        tmpA = 2 * ((Ra - Rd)*Nd + (Ra - Rm)*Nm*2) / (Nd + Nm*4);
+        acelist[[3]] = cbind(
+            A = tmpA,
+            C = 0,
+            E = Ra - tmpA);
+        rm(tmpA);
+        
+        # head(round(acelist[[3]],1));
+    } # acelist[[3]]
+    
+    # Estimate model with E only
+    {
+        acelist[[4]] = cbind(
+            A = 0,
+            C = 0,
+            E = Ra);
+        # head(round(acelist[[4]],1));
+    } # acelist[[4]]
+    
+    # Select best model for each gene
+    {
+        # weights from ACE parameters to 2*c(Rm, Rd, Ra)
+        ace2rrr = matrix(nrow = 3, ncol = 3, data = c(
+            c(0,0,2),
+            c(1,0,2),
+            c(2,2,2)));
+        
+        # best group averages
+        bstmean = 2 * cbind(Rm, Rd, Ra);
+        
+        
+        bestace = matrix(NA_real_, nrow = nrow(gene), ncol = 3);
+        bestmft = rep(+Inf, nrow(gene));
+        
+        for( i in seq_along(acelist) ){ # i = 1;
+            
+            # Current model estimates
+            ace = acelist[[i]];
+            
+            # calculate the misfit (SSE for the model - SSE of best fit).
+            mft = (ace %*% ace2rrr - bstmean)^2 %*% c(Nm, Nd, (N^2 - N)/2 - Nm - Nd);
+            mft[rowSums(ace<0) > 0L] = +Inf;
+            
+            set = which(mft < bestmft);
+            if(length(set)>0){
+                bestace[set,] = ace[set,];
+                bestmft[set ] = mft[set ];
+            }
+            rm(ace, set, mft);
+        }
+        rm(i);
+        rm(ace2rrr, bstmean, bestmft);
+    }
+ 
+    rm(acelist);
+    rm(Rm, Rd, Ra);
+    
+    return(bestace);   
+}
+
 # Generate artificial data set for testing the package
 TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt){
 
@@ -220,20 +393,20 @@ if(FALSE){
 
     devtools::install_github("andreyshabalin/TwinMeta@main")
 
-    library(TwinMeta);
-    set.seed(18090212+3)
-    sim = TwinMeta_simulate( Nm = 1000, Nd = 2000, Ns = 3000, Ngene = 1, Nsnps = 1025, Ncvrt = 0);
+    # library(TwinMeta);
+    set.seed(18090212+1)
+    sim = TwinMeta_simulate( Nm = 1000, Nd = 2000, Ns = 3000, Ngene = 1000, Nsnps = 1025, Ncvrt = 0);
     # gene = sim$gene; snps = sim$snps; cvrt = sim$cvrt; twininfo = sim$twininfo; 
-    pvthreshold = 1000 / (nrow(sim$snps)*nrow(sim$gene))
+    pvthreshold = 1#000 / (nrow(sim$snps) * nrow(sim$gene));
     # rm(sim)
     
     {
         tic = proc.time();
-        results = TwinMeta_testAll(
+        eqtls = TwinMeta_testAll(
             gene = sim$gene,
             snps = sim$snps,
-            cvrt= sim$cvrt,
-            twininfo= sim$twininfo,
+            cvrt = sim$cvrt,
+            twininfo = sim$twininfo,
             pvthreshold = pvthreshold);
         toc = proc.time();
         show(toc - tic);
@@ -244,7 +417,9 @@ if(FALSE){
     
     # 8.51 seconds for N = 9000, Ngene = 1000, Nsnps = 10000, Ncvrt = 10, pvthreshold = 1000 / (nrow(snps)*nrow(gene))
 
-    head(results)
+    head(eqtls)
+    
+    hist(eqtls$pvalue, 100)
 }
 
 # Main function for eQTL testing on twins
@@ -325,168 +500,19 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         rm(twininfo1, twininfo2, MZset, DZset);
     } # idsMZ1, idsMZ2, idsDZ1, idsDZ2, Nm, Nd, N
     
-    # Process covariates
-    {
-        message("Orthonormalizing covariates") 
-        
-        # Combine and add constant element
-        if( NROW(cvrt) > 0 ){
-            cvrtM = rbind(matrix(1,1,ncol(gene)), cvrt);
-        } else {
-            cvrtM = matrix(1,1,ncol(gene));
-        }
-        
-        # Standardize and orthogonolize via QR decomposition
-        q = qr(t(cvrtM));
-        if( min(abs(diag(qr.R(q)))) < .Machine$double.eps * ncol(gene) ){
-            stop("Colinear or zero covariates detected");
-        }
-        zcvrt = t( qr.Q(q) );
-        rm(q);
-    } # cvrtM, zcvrt
-    
-    # Residualize and standardize gene expression data
-    {
-        message("Residualizing gene expression data") 
-
-        rowsq1 = rowSums(gene^2);
-        gene = gene - tcrossprod(gene, zcvrt) %*% zcvrt;
-        rowsq2 = rowSums(gene^2);
-        
-        # kill rows colinear with the covariates
-        delete.rows = (rowsq2 <= rowsq1 * .Machine$double.eps );
-        if(any(delete.rows)){
-            stop('Genes colinear with covariates: ', paste0(rownames(gene)[delete.rows], collapse = ', '))
-        }
-        gene = gene / sqrt(rowsq2);
-        
-        rm(rowsq1, rowsq2, delete.rows);
-        rm(zcvrt);
-    } # gene
     
     # Perform ACE model estimation, using SqD method
     {
-        message("Estimating ACE model for each gene") 
-        
-        # Get mean squares
-        {
-            Rm = rowMeans((gene[,idsMZ1, drop = FALSE] - gene[,idsMZ2, drop = FALSE])^2)/2; # var of MZ pair differences / 2
-            Rd = rowMeans((gene[,idsDZ1, drop = FALSE] - gene[,idsDZ2, drop = FALSE])^2)/2; # var of DZ pair differences / 2
-            Ra = rowMeans(gene^2);
-            
-            # head(cbind(Rm, Rd, Ra))
-        } # Rm, Rd, Ra
-        
-        acelist = vector('list', 4);
-        
-        # Estimate model with A,C,E all included
-        {
-            # Full model
-            #             2*E = c(0,0,2) %*% rez = Rm
-            #   A       + 2*E = c(1,0,2) %*% rez = Rd
-            # 2*A + 2*C + 2*E = c(2,2,2) %*% rez = Ra
-            
-            # mat = matrix(nrow = 3, ncol = 3, data = c(
-            #   c(0,0,2),
-            #   c(1,0,2),
-            #   c(2,2,2)))
-            
-            acelist[[1]] = cbind(
-                A = 2 * (Rd - Rm),
-                C = Rm + Ra - 2 * Rd,
-                E = Rm);
-
-            # head(round(acelist[[1]],1))
-        } # acelist[[1]]
-        
-        # Estimate model with C,E included
-        {
-            #       2*E = c(0,2) %*% rez = 2 * Rm
-            #       2*E = c(0,2) %*% rez = 2 * Rd
-            # 2*C + 2*E = c(2,2) %*% rez = 2 * Ra
-            
-            #       2*E = c(0,2) %*% rez = 2 * (Rm*Nmz + Rd*Ndz) / (Nmz + Ndz)
-            # 2*C + 2*E = c(2,2) %*% rez = 2 * Ra
-            
-            R2 = (Rm * Nm + Rd * Nd) / (Nm + Nd);
-            acelist[[2]] = cbind(
-                A = 0,
-                C = Ra - R2,
-                E = R2);
-            rm(R2);
-            
-            # head(round(acelist[[2]],1));
-        } # acelist[[2]]
-        
-        # Estimate model with A,E included (approximate, very close)
-        {
-            #       2*E = c(0,2) %*% rez = 2 * Rm
-            #   A + 2*E = c(1,2) %*% rez = 2 * Rd
-            # 2*A + 2*E = c(2,2) %*% rez = 2 * Ra
-            
-            # weighted regression
-            tmpA = 2 * ((Ra - Rd)*Nd + (Ra - Rm)*Nm*2) / (Nd + Nm*4);
-            acelist[[3]] = cbind(
-                A = tmpA,
-                C = 0,
-                E = Ra - tmpA);
-            rm(tmpA);
-            
-            # head(round(acelist[[3]],1));
-        } # acelist[[3]]
-        
-        # Estimate model with E only
-        {
-            acelist[[4]] = cbind(
-                A = 0,
-                C = 0,
-                E = Ra);
-            # head(round(acelist[[4]],1));
-        } # acelist[[4]]
-        
-        # Select best model for each gene
-        {
-            # weights from ACE parameters to 2*c(Rm, Rd, Ra)
-            ace2rrr = matrix(nrow = 3, ncol = 3, data = c(
-                c(0,0,2),
-                c(1,0,2),
-                c(2,2,2)));
-            
-            # best group averages
-            bstmean = 2 * cbind(Rm, Rd, Ra);
-            
-            
-            bestace = matrix(NA_real_, nrow = nrow(gene), ncol = 3);
-            bestmft = rep(+Inf, nrow(gene));
-            
-            for( i in seq_along(acelist) ){ # i = 1;
-                
-                # Current model estimates
-                ace = acelist[[i]];
-                
-                # calculate the misfit (SSE for the model - SSE of best fit).
-                mft = (ace %*% ace2rrr - bstmean)^2 %*% c(Nm, Nd, (N^2 - N)/2 - Nm - Nd);
-                mft[rowSums(ace<0) > 0L] = +Inf;
-                
-                set = which(mft < bestmft);
-                if(length(set)>0){
-                    bestace[set,] = ace[set,];
-                    bestmft[set ] = mft[set ];
-                }
-                rm(ace, set, mft);
-            }
-            rm(i);
-            rm(ace2rrr, bstmean, bestmft);
-        }
+        ace = .EstimateACE(gene = gene, cvrt = cvrt, idsMZ1, idsMZ2, idsDZ1, idsDZ2, N);
         
         # Get corr(T1,T2) from bestace
         {
-            bestace = bestace / rowSums(bestace);
+            ace = ace / rowSums(ace);
             
-            # rhoMZ = bestace %*% c(1,   1, 0);
-            # rhoDZ = bestace %*% c(0.5, 1, 0);
+            # rhoMZ = ace %*% c(1,   1, 0);
+            # rhoDZ = ace %*% c(0.5, 1, 0);
             # corrT1T2 = (Nd * rhoDZ + 2 * Nm * rhoMZ) / N;
-            corrT1T2 = as.vector(bestace %*% ((Nd * c(1, 1, 0) + 2 * Nm * c(0.5, 1, 0)) / N));
+            corrT1T2 = as.vector(ace %*% ((Nd * c(1, 1, 0) + 2 * Nm * c(0.5, 1, 0)) / N));
             
             # cor(as.vector(tt1), as.vector(tt2))
             # [1] 0.2177539
@@ -494,12 +520,10 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
             # [1] 0.2186725
             ttmultiplier = 1 / sqrt(2 + 2 * corrT1T2);
             rm(corrT1T2);
-            rm(bestace);
+            rm(ace);
         } # ttmultiplier
         
         # cleanup
-        rm(acelist);
-        rm(Rm, Rd, Ra);
     } # ttmultiplier
     
     # Split the samples into 2 groups, each without related individuals
@@ -525,75 +549,43 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         stopifnot( all(sort(c(ids1, ids2)) == 1:ncol(gene)) );
         
         gene1 = gene[, ids1, drop = FALSE];
-        snps1 = snps[, ids1, drop = FALSE];
-        cvrt1 = cvrtM[,ids1, drop = FALSE];
-        
         gene2 = gene[, ids2, drop = FALSE];
-        snps2 = snps[, ids2, drop = FALSE];
-        cvrt2 = cvrtM[,ids2, drop = FALSE];
-    } # gene1, snps1, cvrt1, gene2, snps2, cvrt2
 
+        if( NROW(cvrt) > 0){
+            cvrt1 = cvrt[, ids1, drop = FALSE];
+            cvrt2 = cvrt[, ids2, drop = FALSE];
+        } else {
+            cvrt1 = NULL;
+            cvrt2 = NULL;
+        }
+    } # gene1, cvrt1, gene2, cvrt2
 
     # Preprocess set 1 (gene1, cvrt1)
     {
         message("Residualizing gene expression data in set 1") 
 
-        q = qr(t(cvrt1));
-        if( min(abs(diag(qr.R(q)))) < .Machine$double.eps * ncol(cvrt1) ){
-            stop("Colinear or zero covariates detected");
-        }
-        cvrt1 = t( qr.Q(q) );
-        rm(q);
-        
-        
-        rowsq1 = rowSums(gene1^2);
-        gene1 = gene1 - tcrossprod(gene1, cvrt1) %*% cvrt1;
-        rowsq2 = rowSums(gene1^2);
-        
-        # kill rows colinear with the covariates
-        delete.rows = (rowsq2 <= rowsq1 * .Machine$double.eps );
-        if(any(delete.rows)){
-            stop('Genes colinear with covariates: ', paste0(rownames(gene1)[delete.rows], collapse = ', '))
-        }
-        gene1 = gene1 / sqrt(rowsq2);
-        rm(rowsq1, rowsq2, delete.rows);
-    }
+        zcvrt1 = .orthonormalizeCovariates(cvrt1, gene1);
+        gene1 = .ResidualizeSlice(gene1, zcvrt1);
+    } # zcvrt1, gene1
     
     # Preprocess set 2 (gene2, cvrt2)
     {
         message("Residualizing gene expression data in set 2") 
         
-        q = qr(t(cvrt2));
-        if( min(abs(diag(qr.R(q)))) < .Machine$double.eps * ncol(cvrt2) ){
-            stop("Colinear or zero covariates detected");
-        }
-        cvrt2 = t( qr.Q(q) );
-        rm(q);
-        
-        
-        rowsq1 = rowSums(gene2^2);
-        gene2 = gene2 - tcrossprod(gene2, cvrt2) %*% cvrt2;
-        rowsq2 = rowSums(gene2^2);
-        
-        # kill rows colinear with the covariates
-        delete.rows = (rowsq2 <= rowsq1 * .Machine$double.eps );
-        if(any(delete.rows)){
-            stop('Genes colinear with covariates: ', paste0(rownames(gene2)[delete.rows], collapse = ', '))
-        }
-        gene2 = gene2 / sqrt(rowsq2);
-        rm(rowsq1, rowsq2, delete.rows);
-    }
+        zcvrt2 = .orthonormalizeCovariates(cvrt2, gene2);
+        gene2 = .ResidualizeSlice(gene2, zcvrt2);
+    } # zcvrt2, gene2
     
     # Loop over SNPs, in blocks
     {
         # Functions consistent through the loop
         {
             # Correlation to t-statistic for slice1
-            dfFull1 = ncol(gene1) - 1 - nrow(cvrt1);
+            dfFull1 = ncol(gene1) - 1 - nrow(zcvrt1);
             testfn1 = function(x){ return(x * sqrt(dfFull1 / (1 - pmin(x^2,1)))); }
             
             # Correlation to t-statistic for slice2
-            dfFull2 = ncol(gene2) - 1 - nrow(cvrt2);
+            dfFull2 = ncol(gene2) - 1 - nrow(zcvrt2);
             testfn2 = function(x){ return(x * sqrt(dfFull2 / (1 - pmin(x^2,1)))); }
             
             # Threshold for abs(z)
@@ -609,7 +601,7 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         } # dfFull1, testfn1, dfFull2, testfn2, absthr, pvfun
         
         blocksize = 1024L;
-        Nsnps = nrow(snps1);
+        Nsnps = nrow(snps);
         nsteps = ceiling(Nsnps/blocksize);
         
         # Create .listBuilder objects to collect results
@@ -629,48 +621,20 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
             
             # Extract SNP slices
             {
-                slice1 = snps1[fr:to, , drop = FALSE];
-                slice2 = snps2[fr:to, , drop = FALSE];
+                slice1 = snps[fr:to, ids1, drop = FALSE];
+                slice2 = snps[fr:to, ids2, drop = FALSE];
             } # slice1, slice2
             
-            # Residualize and standardize slice1
+            # Residualize and standardize slice1, slice2
             {
-                rowsq1 = rowSums(slice1^2);
-                slice1 = slice1 - tcrossprod(slice1, cvrt1) %*% cvrt1;
-                rowsq2 = rowSums(slice1^2);
-                
-                # kill rows colinear with the covariates
-                delete.rows = (rowsq2 <= rowsq1 * .Machine$double.eps );
-                if(any(delete.rows)){
-                    slice1[delete.rows,] = 0;
-                    rowsq2[delete.rows] = 1;
-                }
-                slice1 = slice1 / sqrt(rowsq2);
-                
-                rm(rowsq1, rowsq2, delete.rows);
-            } # slice1
-            
-            # Residualize and standardize slice2
-            {
-                rowsq1 = rowSums(slice2^2);
-                slice2 = slice2 - tcrossprod(slice2, cvrt1) %*% cvrt1;
-                rowsq2 = rowSums(slice2^2);
-                
-                # kill rows colinear with the covariates
-                delete.rows = (rowsq2 <= rowsq1 * .Machine$double.eps );
-                if(any(delete.rows)){
-                    slice2[delete.rows,] = 0;
-                    rowsq2[delete.rows] = 1;
-                }
-                slice2 = slice2 / sqrt(rowsq2);
-                
-                rm(rowsq1, rowsq2, delete.rows);
-            } # slice2
+                slice1 = .ResidualizeSlice(slice1, zcvrt1);
+                slice2 = .ResidualizeSlice(slice2, zcvrt2);
+            } # slice1, slice2
             
             # Getting t-statistics for slice1, slice2, combining them
             {
-                tt1 = testfn1(tcrossprod(gene1,slice1));
-                tt2 = testfn2(tcrossprod(gene2,slice2));
+                tt1 = testfn1(tcrossprod(gene1, slice1));
+                tt2 = testfn2(tcrossprod(gene2, slice2));
                 
                 zstat = (tt1 + tt2) * ttmultiplier;
                 abszz = abs(zstat);
@@ -696,9 +660,8 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     } # collect*
     
     rm(idsMZ1, idsMZ2, idsDZ1, idsDZ2, Nm, Nd, N);
-    rm(cvrtM);
     rm(ttmultiplier);
-    rm(gene1, snps1, cvrt1, gene2, snps2, cvrt2);
+    rm(gene1, cvrt1, gene2, cvrt2, zcvrt1, zcvrt2); # snps1, snps2
     
     # Form the resulting data frame
     {
