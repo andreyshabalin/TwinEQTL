@@ -1,7 +1,12 @@
 library(MatrixEQTL)
 
 ### Format a number with comma delimited thousands
-.s = function(x)formatC(x=x,digits=ceiling(log10(max(x)+1)),big.mark=',',big.interval=3);
+.s = function(x){
+    formatC(x = x, 
+            digits = ceiling(log10(max(x)+1)),
+            big.mark = ',',
+            big.interval = 3)
+}
 
 .my.pmax = function(x, val){
     # minimum "pmin" function that can handle empty array
