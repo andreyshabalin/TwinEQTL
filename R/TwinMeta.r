@@ -68,14 +68,6 @@ library(MatrixEQTL)
 	)
 )
 
-.SlicedDataOffsets = function(x){
-	rez = integer(x$nSlices()+1);
-	for( i in 1:x$nSlices()){
-		rez[i+1] = rez[i] + NROW( x$getSliceRaw(i) );
-	}
-	return(rez);
-}
-
 TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt){
 
     # Default parameters
