@@ -201,6 +201,14 @@
 }
 
 .ProcessTwininfo = function(twininfo, colnms){
+    
+    # Check twininfo
+    {
+        stopifnot( !any(duplicated(c(twininfo[[1]],twininfo[[2]]))) );
+        stopifnot( all(c(twininfo[[1]],twininfo[[2]]) %in% colnms) );
+        stopifnot( all(twininfo[[3]] %in% c("DZ","MZ")) );
+    }
+
     twininfo1 = match(twininfo[[1]], colnms)
     twininfo2 = match(twininfo[[2]], colnms)
     
@@ -498,12 +506,6 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         # columns
         stopifnot( ncol(gene) == ncol(snps) );
         stopifnot( all(colnames(gene) == colnames(snps)) );
-        
-        # twininfo
-        stopifnot( !any(duplicated(c(twininfo[[1]],twininfo[[2]]))) );
-        stopifnot( all(c(twininfo[[1]],twininfo[[2]]) %in% colnames(gene)) );
-        
-        stopifnot( all(twininfo[[3]] %in% c("DZ","MZ")) );
         
         # pvthreshold
         stopifnot( length(pvthreshold) == 1 );
