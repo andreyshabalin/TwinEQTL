@@ -224,7 +224,7 @@ if(FALSE){
 
     library(TwinMeta);
     set.seed(18090212+3)
-    sim = TwinMeta_simulate( Nm = 1000, Nd = 2000, Ns = 3000, Ngene = 1, Nsnps = 1025, Ncvrt = 10);
+    sim = TwinMeta_simulate( Nm = 1000, Nd = 2000, Ns = 3000, Ngene = 1, Nsnps = 1025, Ncvrt = 0);
     # gene = sim$gene; snps = sim$snps; cvrt = sim$cvrt; twininfo = sim$twininfo; 
     pvthreshold = 1000 / (nrow(sim$snps)*nrow(sim$gene))
     # rm(sim)
@@ -275,7 +275,7 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         stopifnot( ncol(snps) > 0 );
         
         # cvrt
-        if( !is.null(cvrt) ){
+        if( NROW(cvrt) > 0 ){
             stopifnot( is.matrix(cvrt) );
             stopifnot( !is.null(rownames(cvrt)) );
             stopifnot( !is.null(colnames(cvrt)) );
@@ -332,7 +332,7 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         message("Orthonormalizing covariates") 
         
         # Combine and add constant element
-        if( NROW(cvrt)>0 ){
+        if( NROW(cvrt) > 0 ){
             cvrtM = rbind(matrix(1,1,ncol(gene)), cvrt);
         } else {
             cvrtM = matrix(1,1,ncol(gene));
