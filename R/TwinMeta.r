@@ -56,10 +56,18 @@
     return(slice);
 }
 
-.EstimateACE = function(gene, cvrt, idsMZ1, idsMZ2, idsDZ1, idsDZ2, N){
+.EstimateACE = function(gene, cvrt, twininfo){
     
-    Nm = length(idsMZ1);
-    Nd = length(idsDZ1);
+    # Process twininfo
+    {
+        message("Parsing twininfo parameter") 
+        
+        ti = .ProcessTwininfo(twininfo = twininfo, colnames(gene));
+        for( nm in names(ti) ) 
+            assign(x = nm, value = ti[[nm]]);
+        rm(nm, ti);
+    } # idsMZ1, idsMZ2, idsDZ1, idsDZ2, idsS, Nm, Nd, N
+
     
     # Residualize and standardize gene expression data
     {
@@ -187,8 +195,32 @@
  
     rm(acelist);
     rm(Rm, Rd, Ra);
-    
+    rm(idsMZ1, idsMZ2, idsDZ1, idsDZ2, Nm, Nd, N);
+
     return(bestace);   
+}
+
+.ProcessTwininfo = function(twininfo, colnms){
+    twininfo1 = match(twininfo[[1]], colnms)
+    twininfo2 = match(twininfo[[2]], colnms)
+    
+    MZset = which(twininfo[[3]] == "MZ");
+    idsMZ1 = twininfo1[MZset];
+    idsMZ2 = twininfo2[MZset];
+    
+    DZset = which(twininfo[[3]] == "DZ");
+    idsDZ1 = twininfo1[DZset];
+    idsDZ2 = twininfo2[DZset];
+    
+    idsS = seq_along(colnms);
+    idsS = idsS[!(idsS %in% c(idsMZ1,idsMZ2,idsDZ1,idsDZ2))];
+    
+    Nm = length(MZset);
+    Nd = length(DZset);
+    N = length(colnms);
+    rm(twininfo1, twininfo2, MZset, DZset);
+    
+    return(list(idsMZ1 = idsMZ1, idsMZ2 = idsMZ2, idsDZ1 = idsDZ1, idsDZ2 = idsDZ2, idsS = idsS, Nm = Nm, Nd = Nd, N = N));
 }
 
 # Generate artificial data set for testing the package
@@ -480,30 +512,16 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     {
         message("Parsing twininfo parameter") 
 
-        twininfo1 = match(twininfo[[1]], colnames(gene))
-        twininfo2 = match(twininfo[[2]], colnames(gene))
-        
-        MZset = which(twininfo[[3]] == "MZ");
-        idsMZ1 = twininfo1[MZset];
-        idsMZ2 = twininfo2[MZset];
-        
-        DZset = which(twininfo[[3]] == "DZ");
-        idsDZ1 = twininfo1[DZset];
-        idsDZ2 = twininfo2[DZset];
-        
-        idsS = 1:ncol(gene)
-        idsS = idsS[!(idsS %in% c(idsMZ1,idsMZ2,idsDZ1,idsDZ2))];
-        
-        Nm = length(MZset);
-        Nd = length(DZset);
-        N = ncol(gene)
-        rm(twininfo1, twininfo2, MZset, DZset);
-    } # idsMZ1, idsMZ2, idsDZ1, idsDZ2, Nm, Nd, N
+        ti = .ProcessTwininfo(twininfo = twininfo, colnames(gene));
+        for( nm in names(ti) ) 
+            assign(x = nm, value = ti[[nm]]);
+        rm(nm, ti);
+    } # idsMZ1, idsMZ2, idsDZ1, idsDZ2, idsS, Nm, Nd, N
     
     
     # Perform ACE model estimation, using SqD method
     {
-        ace = .EstimateACE(gene = gene, cvrt = cvrt, idsMZ1, idsMZ2, idsDZ1, idsDZ2, N);
+        ace = .EstimateACE(gene = gene, cvrt = cvrt, twininfo = twininfo);
         
         # Get corr(T1,T2) from bestace
         {
