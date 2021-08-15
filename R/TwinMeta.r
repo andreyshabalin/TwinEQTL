@@ -224,7 +224,7 @@ if(FALSE){
 
     library(TwinMeta);
     set.seed(18090212+3)
-    sim = TwinMeta_simulate( Nm = 1000, Nd = 2000, Ns = 3000, Ngene = 1000, Nsnps = 10000, Ncvrt = 10);
+    sim = TwinMeta_simulate( Nm = 1000, Nd = 2000, Ns = 3000, Ngene = 1000, Nsnps = 1000, Ncvrt = 10);
     gene = sim$gene; snps = sim$snps; cvrt = sim$cvrt; twininfo = sim$twininfo; pvthreshold = 1000 / (nrow(snps)*nrow(gene))
     # rm(sim)
     
@@ -248,6 +248,8 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     
     # Checks
     {
+        message("Checking input parameters") 
+        
         # gene
         stopifnot( is.matrix(gene) );
         stopifnot( !is.null(rownames(gene)) );
@@ -297,6 +299,8 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     
     # Process twininfo
     {
+        message("Parsing twininfo parameter") 
+
         twininfo1 = match(twininfo[[1]], colnames(gene))
         twininfo2 = match(twininfo[[2]], colnames(gene))
         
@@ -319,6 +323,8 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     
     # Process covariates
     {
+        message("Orthonormalizing covariates") 
+        
         # Combine and add constant element
         if( NROW(cvrt)>0 ){
             cvrtM = rbind(matrix(1,1,ncol(gene)), cvrt);
@@ -337,6 +343,8 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     
     # Residualize and standardize gene expression data
     {
+        message("Residualizing gene expression data") 
+
         rowsq1 = rowSums(gene^2);
         gene = gene - tcrossprod(gene, zcvrt) %*% zcvrt;
         rowsq2 = rowSums(gene^2);
@@ -354,6 +362,8 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     
     # Perform ACE model estimation, using SqD method
     {
+        message("Estimating ACE model for each gene") 
+        
         # Get mean squares
         {
             Rm = rowMeans((gene[,idsMZ1] - gene[,idsMZ2])^2)/2; # var of MZ pair differences / 2
@@ -490,6 +500,8 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     
     # Split the samples into 2 groups, each without related individuals
     {
+        message("Splitting data into two groups of independent samples") 
+        
         # split the data (Avoid R stupidity with ifs
         if( length(idsS) == 0 ){
             idsS1 = c();
@@ -520,6 +532,8 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
 
     # Preprocess set 1 (gene1, cvrt1)
     {
+        message("Residualizing gene expression data in set 1") 
+
         q = qr(t(cvrt1));
         if( min(abs(diag(qr.R(q)))) < .Machine$double.eps * ncol(cvrt1) ){
             stop("Colinear or zero covariates detected");
@@ -543,6 +557,8 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     
     # Preprocess set 2 (gene2, cvrt2)
     {
+        message("Residualizing gene expression data in set 2") 
+        
         q = qr(t(cvrt2));
         if( min(abs(diag(qr.R(q)))) < .Machine$double.eps * ncol(cvrt2) ){
             stop("Colinear or zero covariates detected");
@@ -603,7 +619,8 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         for( part in seq_len(nsteps) ){ # part = 1L
             fr = (part-1L)*blocksize + 1L;
             to = min(part*blocksize, Nsnps);
-            message('Testing SNPs ', fr, ' - ', to);
+            
+            message('Testing SNPs ', .s(fr), ' - ', .s(to), ' of ', .s(Nsnps), '. ', round(100*to/Nsnps,2), '%');
             
             
             # Extract SNP slices
@@ -676,6 +693,8 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     
     # Form the resulting data frame
     {
+        message('Collecting findings in a data frame')
+        
         # gene names factor
         gene.factor = unlist(collect.geneid, recursive = FALSE, use.names = FALSE);
         levels(gene.factor) = rownames(gene);
