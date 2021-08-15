@@ -31,10 +31,10 @@
             Sample1  \tab Sample2  \tab MZ      \cr
             Sample8  \tab Sample9  \tab DZ      \cr
             \ldots   \tab \ldots   \tab \ldots \cr
-        } \cr
+        } 
+        
         Sample ID in the first and second columns must match the column names of \code{gene} and \code{snps}.\cr
         The third column can contain only \code{"MZ"} and \code{"DZ"} values.
-        
     }
 	\item{pvthreshold}{
 		\code{numeric}. Significance threshold. Only associations significant at this level will be returned.
