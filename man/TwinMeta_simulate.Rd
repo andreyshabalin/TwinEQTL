@@ -4,8 +4,8 @@
 	Generate data for test running the package.
 }
 \description{
-	\code{TwinMeta_simulate} function creates artificial data for test running
-	the function \code{\link{TwinMeta_testAll}}.
+	\code{TwinMeta_simulate} function creates artificial data set for test running
+	the main package function \code{\link{TwinMeta_testAll}}.
 }
 \usage{
     TwinMeta_simulate(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt)
@@ -30,9 +30,6 @@
 \references{
 	The package website: \url{https://github.com/andreyshabalin/TwinMeta}
 }
-\seealso{
-	The code below is the sample code for CorrMeta analysis NOT using gene/SNP locations.	
-}
 \examples{
 
 library(TwinMeta)
@@ -47,6 +44,16 @@ Ncvrt = 1
 
 sim = TwinMeta_simulate(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt)
 
-show(sim)
+# Show gene expression data
+head(sim$gene)
+
+# Show genotypes
+head(sim$snps)
+
+# Show covariates
+head(sim$snps)
+
+# Show twininfo data frame
+head(sim$twininfo)
 
 }
