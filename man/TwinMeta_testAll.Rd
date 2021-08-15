@@ -4,50 +4,50 @@
 	Main function for fast eQTL analysis of correlated samples in TwinMeta package.
 }
 \description{
-	\code{TwinMeta_testAll} function tests association of every gene and every SNP in the input data.
-	The input data must be split in two so that the samples in each group are independent.
-	The first data set is defined by (\code{snps1}, \code{gene1}, and \code{cvrt1}) and the second one by (\code{snps2}, \code{gene2}, and \code{cvrt2})
-	The input data sets must be provided in the form of \code{\link[MatrixEQTL]{SlicedData-class}} objects.
+	\code{TwinMeta_testAll} function tests for association 
+	between every gene and every SNP in the input data.
 }
 \usage{
-TwinMeta_testAll(
-    snps1,
-    gene1,
-    cvrt1,
-    snps2,
-    gene2,
-    cvrt2,
-    pvThreshold)
+    TwinMeta_testAll(gene, snps, cvrt, twininfo, pvthreshold)
 }
 \arguments{
-	\item{snps1, snps2}{
-		\code{\linkS4class{SlicedData}} objects with genotype information.
-		The slice size should be set to a relatively large number (i.e. 50,000) [see \code{\linkS4class{SlicedData}}].
-	}
-	\item{gene1, gene2}{
-		\code{\linkS4class{SlicedData}} objects with gene expression information. 
-		Must have columns matching those of \code{snps1} and \code{snps2} respectively.
-		The slice size should be set to a relatively small number (i.e. 50 or 100) if the number of SNPs is large [see \code{\linkS4class{SlicedData}}].
-	}
-	\item{cvrt1, cvrt2}{
-		\code{\linkS4class{SlicedData}} objects with additional covariates. 
-		Can be an empty \code{SlicedData} object in case of no covariates.
-		The constant is always included in the model and would cause an error if included in \code{cvrt}.
-		The order of columns must match those in \code{snps1} and \code{snps2} respectively.
-	}
-	\item{pvThreshold}{
+    \item{gene}{
+        A matrix with gene expression data, one column per sample and one row per gene. \cr
+        The matrix must have both row (gene) and column (sample) names.
+    }
+    \item{snps}{
+        A matrix with genotype data, one column per sample and one row per SNP. \cr
+        The matrix must have both row (SNP) and column (sample) names.
+    }
+    \item{cvrt}{
+        A matrix with covariate data, one column per sample and one row per covariate. \cr
+        The matrix must have both row (covariate) and column (sample) names. \cr
+        Can be \code{NULL} to indicate no covariates (constant still included).
+    }
+    \item{twininfo}{
+        A data frame with the information about all twin pairs, one twin pair per row. Like this: \cr
+        \tabular{rrr}{
+            \strong{first}    \tab \strong{second}   \tab \strong{type}   \cr
+            Sample1  \tab Sample2  \tab MZ      \cr
+            Sample8  \tab Sample9  \tab DZ      \cr
+            \ldots   \tab \ldots   \tab \ldots \cr
+        } \cr
+        Sample ID in the first and second columns must match the column names of \code{gene} and \code{snps}.\cr
+        The third column can contain only \code{"MZ"} and \code{"DZ"} values.
+        
+    }
+	\item{pvthreshold}{
 		\code{numeric}. Significance threshold. Only associations significant at this level will be returned.
 	}
 }
 \details{
-	Note that the columns of \code{gene1}, \code{snps1}, and \code{cvrt1} must match. Same for the second data set.
-	If they do not match in the input files, use \code{ColumnSubsample} method to subset and/or reorder them.
+	Note that the columns of \code{gene}, \code{snps}, and \code{cvrt1} (if not \code{NULL}) must match.
 }
 \value{
-	Returns data frame with the significant associations.
+	Returns data frame with the significant associations (z-scores and p-values).
 }
 \author{
-        Andrey A Shabalin \email{andrey.shabalin@gmail.com}
+    Andrey A Shabalin \email{andrey.shabalin@gmail.com}
 
 	Maintainer: Andrey A Shabalin <andrey.shabalin@gmail.com>
 }
@@ -55,54 +55,43 @@ TwinMeta_testAll(
 	The package website: \url{https://github.com/andreyshabalin/TwinMeta}
 }
 \seealso{
-	The code below is the sample code for TwinMeta analysis NOT using gene/SNP locations.	
+	The code below is the sample code for TwinMeta analysis on artificial data.	
 }
 \examples{
 library(TwinMeta)
 
-pvThreshold = 1e-4;
+# Number of MZ twin pairs
+Nm = 1000
 
-# Location of data files
+# Number of DZ twin pairs
+Nd = 2000
 
-data.path = paste0(find.package('TwinMeta'),'/data/');
+# Number of singleton samples
+Ns = 3000
 
-# Joint data set file names
+# Number of genes
+Ngene = 1000
 
-snps.file = paste0(data.path,'snps.txt');
-gene.file = paste0(data.path,'gene.txt');
-cvrt.file = paste0(data.path,'cvrt.txt');
+# Number of SNPs
+Nsnps = 1000
 
-# Load joint data sets
+# Number of covariates
+Ncvrt = 10
 
-snps = SlicedData$new()$LoadFile(snps.file, sliceSize = 50000);
-gene = SlicedData$new()$LoadFile(gene.file, sliceSize = 100);
-cvrt = SlicedData$new()$LoadFile(cvrt.file);
+# Gerenate artificial data
+sim = TwinMeta_simulate( Nm, Nd, Ns, Ngene, Nsnps, Ncvrt);
 
-# Indicator for samples in set 1
+# Pick a p-value threshold
+pvthreshold = 1000 / (Ngene * Nsnps)
 
-set1 = ((1:ncol(gene)) \%\% 2) == 1;
-
-# Create set 1 of data (odd samples), preserving original sets
-
-snps1 = snps$Clone()$ColumnSubsample(set1);
-gene1 = gene$Clone()$ColumnSubsample(set1);
-cvrt1 = cvrt$Clone()$ColumnSubsample(set1);
-
-# Create set 2 of data (even samples), destroying original sets
-
-snps2 = snps$ColumnSubsample(!set1);
-gene2 = gene$ColumnSubsample(!set1);
-cvrt2 = cvrt$ColumnSubsample(!set1);
-rm(cvrt, gene, snps);
-
-# Run the analysis
-
-result = TwinMeta_testAll(
-    snps1, gene1, cvrt1,
-    snps2, gene2, cvrt2,
-    pvThreshold)
+# Run eQTL analysis on the data with twins
+eqtls = TwinMeta_testAll(
+    gene = sim$gene,
+    snps = sim$snps,
+    cvrt = sim$cvrt,
+    twininfo = sim$twininfo,
+    pvthreshold = pvthreshold)
 
 # Display the results
-
-head(result)
+head(eqtls)
 }
