@@ -20,60 +20,6 @@ library(MatrixEQTL)
 # Avoid creating zero p-values
 .pv.nz = function(x){ .my.pmax(x, .Machine$double.xmin) }
 
-# Accumulate the results in slices of a data frame
-.listBuilder = setRefClass(".listBuilder",
-	fields = list(
-		dataEnv = "environment",
-		n = "integer",
-		count = 'numeric'
-	),
-	methods = list(
-		initialize = function(){
-			.self$dataEnv = new.env(hash = TRUE);
-			.self$n = 0L;
-			.self$count = 0;
-# 			cumlength <<- 0;
-			return(.self);
-		},
-		add = function(x){
-			if(length(x) > 0){
-				n <<- n + 1L;
-# 				cumlength <<- cumlength + length(x);
-				assign(paste(n), x, dataEnv );
-				.self$count = .self$count + length(x);
-			}
-			return(.self);
-		},
-		set = function(i,x){
-			i = as.integer(i);
-			if(length(x) > 0){
-				if(i>n)
-					n <<- i;
-				assign(paste(i), x, dataEnv );
-			}
-			return(.self);
-		},
-		get = function(i){
-			return(base::get(paste(i),dataEnv));
-		},
-		list = function(){
-			if(n==0)	return(list());
-			result = vector("list",n);
-			for( i in 1:n ){
-				result[[i]] = .self$get(i);
-			}
-			return(result);
-		},
-		unlist = function(){
-			return(base::unlist(.self$list(), recursive=FALSE, use.names = FALSE));
-		},
-		show = function(){
-			cat(".listBuilder object.\nIternal object in TwinMeta package.\n");
-			cat("Number of elements:", .self$n, "\n");
-		}
-	)
-)
-
 TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt){
 
     # Default parameters
@@ -601,14 +547,6 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         rm(rowsq1, rowsq2, delete.rows);
     }
     
-    # Create .listBuilder objects to collect results
-    {
-        collect.geneid = new('.listBuilder');
-        collect.snpsid = new('.listBuilder');
-        collect.zscore = new('.listBuilder');
-        collect.pvalue = new('.listBuilder');
-    } # collect.geneid, collect.snpsid, collect.zscore, collect.pvalue
-
     # Loop over SNPs, in blocks
     {
         # Functions consistent through the loop
@@ -636,6 +574,15 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         blocksize = 1024L %/% 8L;
         Nsnps = nrow(snps1);
         nsteps = ceiling(Nsnps/blocksize);
+        
+        # Create .listBuilder objects to collect results
+        {
+            collect.geneid = vector('list', nsteps);
+            collect.snpsid = vector('list', nsteps);
+            collect.zscore = vector('list', nsteps);
+            collect.pvalue = vector('list', nsteps);
+        } # collect.geneid, collect.snpsid, collect.zscore, collect.pvalue
+        
         for( part in seq_len(nsteps) ){ # part = 1L
             fr = (part-1L)*blocksize + 1L;
             to = min(part*blocksize, Nsnps);
@@ -697,10 +644,10 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
             {
                 selected = which(abszz > absthr, arr.ind = TRUE, useNames = FALSE);
                 if( length(selected) > 0 ){
-                    collect.geneid$add(selected[,1]);
-                    collect.snpsid$add(selected[,2] + (fr - 1L));
-                    collect.zscore$add(zstat[selected]);
-                    collect.pvalue$add(pvfun(abszz[selected]));
+                    collect.geneid[[part]] = selected[,1];
+                    collect.snpsid[[part]] = selected[,2] + (fr - 1L);
+                    collect.zscore[[part]] = zstat[selected];
+                    collect.pvalue[[part]] = pvfun(abszz[selected]);
                 }
                 rm(selected);
             }
@@ -713,20 +660,20 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     # Form the resulting data frame
     {
         # gene names factor
-        gene.factor = collect.geneid$unlist();
+        gene.factor = unlist(collect.geneid, recursive = FALSE, use.names = FALSE);
         levels(gene.factor) = rownames(gene);
         class(gene.factor) = 'factor';
         
         # SNPs names factor
-        snps.factor = collect.snpsid$unlist();
+        snps.factor = unlist(collect.snpsid, recursive = FALSE, use.names = FALSE);
         levels(snps.factor) = rownames(snps);
         class(snps.factor) = 'factor';
         
-        results = data.frame( 
+        results = data.frame(
             gene = gene.factor,
             snps = snps.factor,
-            zscore = collect.zscore$unlist(),
-            pvalue = collect.pvalue$unlist());
+            zscore = unlist(collect.zscore, recursive = FALSE, use.names = FALSE),
+            pvalue = unlist(collect.pvalue, recursive = FALSE, use.names = FALSE));
     } # results
     
     return(results);
