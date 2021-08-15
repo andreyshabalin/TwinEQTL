@@ -427,9 +427,9 @@ if(FALSE){
 
     # library(TwinMeta);
     set.seed(18090212+1)
-    sim = TwinMeta_simulate( Nm = 1000, Nd = 2000, Ns = 3000, Ngene = 1000, Nsnps = 1025, Ncvrt = 0);
+    sim = TwinMeta_simulate(Nm = 1000, Nd = 2000, Ns = 3000, Ngene = 1000, Nsnps = 800, Ncvrt = 0);
     # gene = sim$gene; snps = sim$snps; cvrt = sim$cvrt; twininfo = sim$twininfo; 
-    pvthreshold = 1#000 / (nrow(sim$snps) * nrow(sim$gene));
+    pvthreshold = 1000 / (nrow(sim$snps) * nrow(sim$gene));
     # rm(sim)
     
     {
@@ -443,6 +443,10 @@ if(FALSE){
         toc = proc.time();
         show(toc - tic);
     }
+    
+    
+    # 423.11 secs for N = 9000, Ngene = 10000, Nsnps = 80000, Ncvrt = 0, pvthreshold = 1
+    # 271.86 secs for N = 9000, Ngene = 10000, Nsnps = 80000, Ncvrt = 0, pvthreshold = 1000 / (nrow(sim$snps) * nrow(sim$gene))
     
     # 1.85 seconds for N = 9000, Ngene = 1000, Nsnps = 1000, Ncvrt = 10, pvthreshold = 1000 / (nrow(snps)*nrow(gene))
     # 1.93 seconds for N = 9000, Ngene = 1000, Nsnps = 1000, Ncvrt = 10, pvthreshold = 1000 / (nrow(snps)*nrow(gene))
