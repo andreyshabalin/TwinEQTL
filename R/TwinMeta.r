@@ -232,7 +232,7 @@
 }
 
 # Generate artificial data set for testing the package
-TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt){
+TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, MAF = NULL){
 
     # Default parameters
     if(FALSE){
@@ -244,6 +244,12 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt){
         Nsnps = 100000
         Ncvrt = 10
         
+        ACEparam = c(3,4,5);
+        ACEparam = matrix(data = runif(Ngene*3), nrow = Ngene, ncol = 3);
+        
+        MAF = 0.2;
+        MAF = runif(Nsnps)^2*0.49+0.01;
+            
         # sim = TwinMeta_simulate( Nm = 10, Nd = 10, Ns = 10, Ngene = 1000, Nsnps = 1000, Ncvrt = 10)
     }
     
@@ -286,6 +292,43 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt){
         stopifnot(Ncvrt == as.integer(Ncvrt))
         
         stopifnot(Nm + Nd + Ns >= 1);
+        
+        if( is.null(ACEparam) ){
+            a = 3 + 3 * runif(Ngene);
+            c = 4 + 4 * runif(Ngene);
+            e = 5 + 4 * runif(Ngene);
+        } else {
+            stopifnot( is.numeric(ACEparam) );
+            stopifnot(all( ACEparam >= 0 ));
+            
+            if( is.matrix(ACEparam) ){
+                
+                stopifnot( nrow(ACEparam) == Ngene );
+                stopifnot( ncol(ACEparam) == 3 );
+                
+                a = sqrt(ACEparam[,1]);
+                c = sqrt(ACEparam[,2]);
+                e = sqrt(ACEparam[,3]);
+                
+            } else {
+                
+                stopifnot( length(ACEparam) == 3 )
+                
+                a = sqrt(ACEparam[1]);
+                c = sqrt(ACEparam[2]);
+                e = sqrt(ACEparam[3]);
+                
+            }
+        }
+        
+        if( is.null(MAF) ){
+            MAF = runif(Nsnps)^2*0.49+0.01;
+        } else {
+            stopifnot( is.numeric(MAF) );
+            stopifnot(all( MAF >= 0 ));
+            stopifnot(all( MAF <= 1 ));
+            stopifnot( length(MAF) %in% c(1, Nsnps) );
+        }
     }
     
     # Make integers
@@ -316,11 +359,7 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt){
     # Generate Gene expression
     {
         message("Gene: Start generating gene expression")
-        message("Gene: Generating ACE parameters for each gene");        
-        a = 3 + 3 * runif(Ngene);
-        c = 4 + 4 * runif(Ngene);
-        e = 5 + 4 * runif(Ngene);
-        
+
         # Genotype effect component
         message("Gene: Generating A component")
         A = matrix(0, Ngene, N);
@@ -361,22 +400,22 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt){
     {
         message("SNPs: Start generating genotypes")
         message("SNPs: Generating MAF for each SNP") 
-        maf = runif(Nsnps)^2*0.49+0.01;
+        # MAF = runif(Nsnps)^2*0.49+0.01;
         # A1 = rbinom(Nsnps*N, size = 1, prob = maf);
         
         message("SNPs: Generating Allele 1 with given MAF");
         A1 = matrix(NA_integer_, Nsnps, N);
-        A1[,-c(idsMZ2,idsDZ2)] = as.integer(runif(Nsnps * as.numeric(N - Nm - Nd)) < maf);
+        A1[,-c(idsMZ2,idsDZ2)] = as.integer(runif(Nsnps * as.numeric(N - Nm - Nd)) < MAF);
 
         message("SNPs: Generating Allele 2 with given MAF");
         A2 = matrix(NA_integer_, Nsnps, N);
-        A2[,-idsMZ2] = as.integer(runif(Nsnps * as.numeric(N - Nm)) < maf);
+        A2[,-idsMZ2] = as.integer(runif(Nsnps * as.numeric(N - Nm)) < MAF);
         
-        # system.time({ A1 = rbinom(Nsnps*N, size = 1, prob = maf); dim(A1) = c(Nsnps, N); })
-        # system.time({ A1 = as.integer(runif(Nsnps*N) < maf); dim(A1) = c(Nsnps, N); })
+        # system.time({ A1 = rbinom(Nsnps*N, size = 1, prob = MAF); dim(A1) = c(Nsnps, N); })
+        # system.time({ A1 = as.integer(runif(Nsnps*N) < MAF); dim(A1) = c(Nsnps, N); })
         
         # A1[1:10,1:10]
-        # as.matrix(maf[1:10])
+        # as.matrix(MAF[1:10])
         
         message("SNPs: Generating SNP matrix");
         snps = matrix(-1L, nrow = Nsnps, ncol = N);
@@ -402,7 +441,7 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt){
         colnames(snps) = colnames(gene);
         rownames(snps) = sprintf("Snp_%06d", seq_len(Nsnps));
         
-        rm(maf);
+        # rm(MAF);
         rm(A1, A2);
         
         message("SNPs: Done generating genotypes")
@@ -435,9 +474,22 @@ if(FALSE){
 
     # library(TwinMeta);
     set.seed(18090212+1)
-    sim = TwinMeta_simulate(Nm = 1000, Nd = 2000, Ns = 3000, Ngene = 1000, Nsnps = 800, Ncvrt = 0);
+    
+    Nm = 1000; Nd = 2000; Ns = 3000; Ngene = 1000; Nsnps = 8; Ncvrt = 1;
+    
+    ACEparam = c(3,4,5);
+    sim = TwinMeta_simulate(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = ACEparam);
+    ace = .EstimateACE(gene = sim$gene, cvrt = sim$cvrt, twininfo = sim$twininfo);
+    ace = ace / rowSums(ace) * sum(ACEparam);
+    
+    hist(ace[,1], 100); abline(v = ACEparam[1], col = 'red');
+    hist(ace[,2], 100); abline(v = ACEparam[2], col = 'red');
+    hist(ace[,3], 100); abline(v = ACEparam[3], col = 'red');
+    
+    
+    
     # gene = sim$gene; snps = sim$snps; cvrt = sim$cvrt; twininfo = sim$twininfo; 
-    pvthreshold = 1000 / (nrow(sim$snps) * nrow(sim$gene));
+    pvthreshold = 1#000 / (nrow(sim$snps) * nrow(sim$gene));
     # rm(sim)
     
     {
@@ -451,6 +503,7 @@ if(FALSE){
         toc = proc.time();
         show(toc - tic);
     }
+    
     
     
     # 423.11 secs for N = 9000, Ngene = 10000, Nsnps = 80000, Ncvrt = 0, pvthreshold = 1

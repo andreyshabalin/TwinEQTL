@@ -8,7 +8,7 @@
 	the main package function \code{\link{TwinMeta_testAll}}.
 }
 \usage{
-    TwinMeta_simulate(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt)
+    TwinMeta_simulate(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, MAF = NULL)
 }
 \arguments{
 	\item{Nm}{Number of MZ twin pairs.}
@@ -17,6 +17,15 @@
 	\item{Ngene}{Number of genes in gene expression data.}
 	\item{Nsnps}{Number of SNPs in genotype data.}
 	\item{Ncvrt}{Number of covariates.}
+	\item{ACEparam}{
+	    ACE model parameters. \cr
+	    Must be either length 3 vector with \eqn{(\sigma^2_A, \sigma^2_C, \sigma^2_E)} or an \code{Nsnps} by 3 matrix of such vectors for each SNP.
+	}
+	\item{MAF}{
+	    Minor allele frequency for the generated SNPs. \cr
+	    Must be either a single value or a vector of length \code{Nsnps}. \cr
+	    The values must be between 0 and 1.
+	}
 }
 \value{
 	Returns a list with generated gene expression (\code{gene}), genotype (\code{snps}), covariates (\code{cvrt}),
