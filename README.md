@@ -38,51 +38,37 @@ The package includes reference manual, sample data and a Vignette.
 ```r
 library(TwinMeta)
 
-pvThreshold = 1e-4
+# Generate artificial data set 
 
-# Location of data files
+# Number of MZ twin pairs
+Nm = 1000
 
-data.path = file.path(find.package('TwinMeta'), 'data')
+# Number of DZ twin pairs
+Nd = 2000
 
-# Joint data set file names
+# Number of singleton samples
+Ns = 3000
 
-snps.file = file.path(data.path, 'snps.txt')
-gene.file = file.path(data.path, 'gene.txt')
-cvrt.file = file.path(data.path, 'cvrt.txt')
+# Number of genes
+Ngene = 1000
 
-# Load joint data sets
+# Number of SNPs
+Nsnps = 1000
 
-snps = SlicedData$new()$LoadFile(snps.file, sliceSize = 1000)
-gene = SlicedData$new()$LoadFile(gene.file, sliceSize = 1000)
-cvrt = SlicedData$new()$LoadFile(cvrt.file)
+# Number of covariates
+Ncvrt = 10
 
-# Indicator for samples in set 1
+# Gerenate artificial data
+sim = TwinMeta_simulate( Nm, Nd, Ns, Ngene, Nsnps, Ncvrt);
 
-set1 = ((1:ncol(gene)) %% 2) == 1
+# Pick a p-value threshold
+pvThreshold = 1000 / (Ngene * Nsnps)
 
-# Create set 1 of data (odd samples), preserving original sets
-
-snps1 = snps$Clone()$ColumnSubsample(set1)
-gene1 = gene$Clone()$ColumnSubsample(set1)
-cvrt1 = cvrt$Clone()$ColumnSubsample(set1)
-
-# Create set 2 of data (even samples), destroying original sets
-
-snps2 = snps$ColumnSubsample(!set1)
-gene2 = gene$ColumnSubsample(!set1)
-cvrt2 = cvrt$ColumnSubsample(!set1)
-rm(cvrt, gene, snps)
-
-# Run the analysis
-
-result = TwinMeta_testAll(
-    snps1, gene1, cvrt1,
-    snps2, gene2, cvrt2,
-    pvThreshold)
+# Run eQTL analysis on the data with twins
+eqtls = TwinMeta_testAll(gene, snps, cvrt, twininfo, pvthreshold);
 
 # Display the results
-
-head(result)
+head(eqtls)
 ```
 
 ## Citation
