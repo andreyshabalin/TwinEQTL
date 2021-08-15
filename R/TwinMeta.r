@@ -339,7 +339,7 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         }
         
         # Standardize and orthogonolize via QR decomposition
-        q = qr(t(cvrt));
+        q = qr(t(cvrtM));
         if( min(abs(diag(qr.R(q)))) < .Machine$double.eps * ncol(gene) ){
             stop("Colinear or zero covariates detected");
         }
