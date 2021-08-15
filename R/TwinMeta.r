@@ -20,6 +20,7 @@ library(MatrixEQTL)
 # Avoid creating zero p-values
 .pv.nz = function(x){ .my.pmax(x, .Machine$double.xmin) }
 
+# Generate artificial data set for testing the package
 TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt){
 
     # Default parameters
@@ -241,6 +242,8 @@ if(FALSE){
 
     head(results)
 }
+
+# Main function for eQTL testing on twins
 TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     
     # Checks
@@ -510,7 +513,7 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         # > mean(corrT1T2)
         # [1] 0.2186725
         ttmultiplier = 1 / sqrt(2 + 2 * corrT1T2);
-        rm(rhoMZ, rhoDZ, corrT1T2)
+        rm(corrT1T2);
         rm(bestace);
     } # ttmultiplier
     
@@ -565,12 +568,12 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         # Functions consistent through the loop
         {
             # Correlation to t-statistic for slice1
-            dfFull1 = ncol(	gene1 ) - 1 - nrow(cvrt1);
-            testfn1 = function(x){ return( x * sqrt( dfFull1 / (1 - pmin(x^2,1)))); }
+            dfFull1 = ncol(gene1) - 1 - nrow(cvrt1);
+            testfn1 = function(x){ return(x * sqrt(dfFull1 / (1 - pmin(x^2,1)))); }
             
             # Correlation to t-statistic for slice2
-            dfFull2 = ncol(	gene2 ) - 1 - nrow(cvrt2);
-            testfn2 = function(x){ return( x * sqrt( dfFull2 / (1 - pmin(x^2,1)))); }
+            dfFull2 = ncol(gene2) - 1 - nrow(cvrt2);
+            testfn2 = function(x){ return(x * sqrt(dfFull2 / (1 - pmin(x^2,1)))); }
             
             # Threshold for abs(z)
             absthr =  qnorm(pvthreshold/2, lower.tail = FALSE);
@@ -579,12 +582,12 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
 
             # Get p-value from abs(z)
             pvfun = function(absz){
-                return( .pv.nz(pnorm(absz,lower.tail = FALSE)*2));
+                return( .pv.nz(pnorm(absz, lower.tail = FALSE)*2));
             }
             
         } # dfFull1, testfn1, dfFull2, testfn2, absthr, pvfun
         
-        blocksize = 1024L %/% 8L;
+        blocksize = 1024L;
         Nsnps = nrow(snps1);
         nsteps = ceiling(Nsnps/blocksize);
         
