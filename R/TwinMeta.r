@@ -224,9 +224,9 @@ if(FALSE){
 
     library(TwinMeta);
     set.seed(18090212+3)
-    sim = TwinMeta_simulate( Nm = 1000, Nd = 2000, Ns = 3000, Ngene = 1000, Nsnps = 1000, Ncvrt = 10);
+    sim = TwinMeta_simulate( Nm = 1000, Nd = 2000, Ns = 3000, Ngene = 1, Nsnps = 1025, Ncvrt = 10);
     # gene = sim$gene; snps = sim$snps; cvrt = sim$cvrt; twininfo = sim$twininfo; 
-    pvthreshold = 1000 / (nrow(snps)*nrow(gene))
+    pvthreshold = 1000 / (nrow(sim$snps)*nrow(sim$gene))
     # rm(sim)
     
     {
@@ -678,7 +678,7 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
                 abszz = abs(zstat);
                 rm(tt1,tt2);
                 # qqnorm(as.vector(zstat))
-            } # zstat
+            } # zstat, abszz
             
             # Select z-stats exceeding threshold, record them in collect*
             {
@@ -690,12 +690,17 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
                     collect.pvalue[[part]] = pvfun(abszz[selected]);
                 }
                 rm(selected);
-            }
+            } # collect.* updated
             rm(slice1, slice2, zstat, abszz)
         }
         rm(part, blocksize, Nsnps, nsteps, fr, to);
         rm(dfFull1, testfn1, dfFull2, testfn2, absthr, pvfun)
     } # collect*
+    
+    rm(idsMZ1, idsMZ2, idsDZ1, idsDZ2, Nm, Nd, N);
+    rm(cvrtM);
+    rm(ttmultiplier);
+    rm(gene1, snps1, cvrt1, gene2, snps2, cvrt2);
     
     # Form the resulting data frame
     {
