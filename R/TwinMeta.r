@@ -316,7 +316,7 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt){
         # Genotype effect component
         message("Gene: Generating A component")
         A = matrix(0, Ngene, N);
-        A[,-idsMZ2] = rnorm(Ngene*(N-Nm))*a;
+        A[,-idsMZ2] = rnorm(Ngene*as.numeric(N-Nm))*a;
         
         A[,idsMZ2] = A[,idsMZ1];
         A[,idsDZ2] = A[,idsDZ1] * 0.5 + sqrt(0.75) * A[,idsDZ2];
@@ -326,7 +326,7 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt){
         
         message("Gene: Generating C component")
         C = matrix(0, Ngene, N);
-        C[,-c(idsMZ2,idsDZ2)] = rnorm(Ngene*(N-Nm-Nd))*c;
+        C[,-c(idsMZ2,idsDZ2)] = rnorm(Ngene*as.numeric(N-Nm-Nd))*c;
         
         C[,idsMZ2] = C[,idsMZ1];
         C[,idsDZ2] = C[,idsDZ1];
@@ -335,7 +335,7 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt){
         # cor(c(C[,idsMZ1]), c(C[,idsMZ2]))
         
         message("Gene: Generating E component");
-        E = rnorm(Ngene*N)*e;
+        E = rnorm(Ngene*as.numeric(N))*e;
         dim(E) = c(Ngene, N);
         
         message("Gene: Generating gene expression as A+C+E")
