@@ -465,10 +465,28 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
             rm(ace2rrr, bstmean, bestmft);
         }
         
+        # Get corr(T1,T2) from bestace
+        {
+            bestace = bestace / rowSums(bestace);
+            
+            # rhoMZ = bestace %*% c(1,   1, 0);
+            # rhoDZ = bestace %*% c(0.5, 1, 0);
+            # corrT1T2 = (Nd * rhoDZ + 2 * Nm * rhoMZ) / N;
+            corrT1T2 = as.vector(bestace %*% ((Nd * c(1, 1, 0) + 2 * Nm * c(0.5, 1, 0)) / N));
+            
+            # cor(as.vector(tt1), as.vector(tt2))
+            # [1] 0.2177539
+            # > mean(corrT1T2)
+            # [1] 0.2186725
+            ttmultiplier = 1 / sqrt(2 + 2 * corrT1T2);
+            rm(corrT1T2);
+            rm(bestace);
+        } # ttmultiplier
+        
         # cleanup
         rm(acelist);
         rm(Rm, Rd, Ra);
-    } # bestace
+    } # ttmultiplier
     
     # Split the samples into 2 groups, each without related individuals
     {
@@ -499,24 +517,7 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         cvrt2 = cvrtM[,ids2, drop = FALSE];
     } # gene1, snps1, cvrt1, gene2, snps2, cvrt2
 
-    # Get corr(T1,T2) from bestace
-    {
-        bestace = bestace / rowSums(bestace);
-        
-        # rhoMZ = bestace %*% c(1,   1, 0);
-        # rhoDZ = bestace %*% c(0.5, 1, 0);
-        # corrT1T2 = (Nd * rhoDZ + 2 * Nm * rhoMZ) / N;
-        corrT1T2 = as.vector(bestace %*% ((Nd * c(1,   1, 0) + 2 * Nm * c(0.5, 1, 0)) / N));
-        
-        # cor(as.vector(tt1), as.vector(tt2))
-        # [1] 0.2177539
-        # > mean(corrT1T2)
-        # [1] 0.2186725
-        ttmultiplier = 1 / sqrt(2 + 2 * corrT1T2);
-        rm(corrT1T2);
-        rm(bestace);
-    } # ttmultiplier
-    
+
     # Preprocess set 1 (gene1, cvrt1)
     {
         q = qr(t(cvrt1));
