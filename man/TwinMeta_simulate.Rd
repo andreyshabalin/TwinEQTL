@@ -19,7 +19,7 @@
 	\item{Ncvrt}{Number of covariates.}
 	\item{ACEparam}{
 	    ACE model parameters. \cr
-	    Must be either length 3 vector with \eqn{(\sigma^2_A, \sigma^2_C, \sigma^2_E)} or an \code{Nsnps} by 3 matrix of such vectors for each SNP.
+	    Must be either length 3 vector with \eqn{(\sigma^2_A, \sigma^2_C, \sigma^2_E)} or an \code{Nsnps} by 3 matrix of such rows for each SNP.
 	}
 	\item{MAF}{
 	    Minor allele frequency for the generated SNPs. \cr
