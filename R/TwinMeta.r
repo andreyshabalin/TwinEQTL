@@ -202,6 +202,9 @@
 
 .ProcessTwininfo = function(twininfo, colnms){
     
+    twininfo[[1]] = as.character(twininfo[[1]]);
+    twininfo[[2]] = as.character(twininfo[[2]]);
+    
     # Check twininfo
     {
         stopifnot( !any(duplicated(c(twininfo[[1]],twininfo[[2]]))) );
