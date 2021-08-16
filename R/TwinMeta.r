@@ -80,14 +80,9 @@ EstimateACE_SqD = function(gene, cvrt, twininfo){
     # Process twininfo
     {
         message("Parsing twininfo parameter") 
-        
         ti = .ProcessTwininfo(twininfo = twininfo, colnames(gene));
-        for( nm in names(ti) ) 
-            assign(x = nm, value = ti[[nm]]);
-        rm(nm, ti);
-    } # idsMZ1, idsMZ2, idsDZ1, idsDZ2, idsS, Nm, Nd, N
+    } # ti with (idsMZ1, idsMZ2, idsDZ1, idsDZ2, idsS, Nm, Nd, N)
 
-    
     # Residualize and standardize gene expression data
     {
         message("Orthonormalizing covariates");
@@ -103,8 +98,8 @@ EstimateACE_SqD = function(gene, cvrt, twininfo){
     
     # Get mean squares
     {
-        Rm = rowMeans((gene[,idsMZ1, drop = FALSE] - gene[,idsMZ2, drop = FALSE])^2)/2; # var of MZ pair differences / 2
-        Rd = rowMeans((gene[,idsDZ1, drop = FALSE] - gene[,idsDZ2, drop = FALSE])^2)/2; # var of DZ pair differences / 2
+        Rm = rowMeans((gene[,ti$idsMZ1, drop = FALSE] - gene[,ti$idsMZ2, drop = FALSE])^2)/2; # var of MZ pair differences / 2
+        Rd = rowMeans((gene[,ti$idsDZ1, drop = FALSE] - gene[,ti$idsDZ2, drop = FALSE])^2)/2; # var of DZ pair differences / 2
         Ra = rowMeans(gene^2);
         
         # head(cbind(Rm, Rd, Ra))
@@ -141,7 +136,7 @@ EstimateACE_SqD = function(gene, cvrt, twininfo){
         #       2*E = c(0,2) %*% rez = 2 * (Rm*Nmz + Rd*Ndz) / (Nmz + Ndz)
         # 2*C + 2*E = c(2,2) %*% rez = 2 * Ra
         
-        R2 = (Rm * Nm + Rd * Nd) / (Nm + Nd);
+        R2 = (Rm * ti$Nm + Rd * ti$Nd) / (ti$Nm + ti$Nd);
         acelist[[2]] = cbind(
             A = 0,
             C = Ra - R2,
@@ -158,7 +153,7 @@ EstimateACE_SqD = function(gene, cvrt, twininfo){
         # 2*A + 2*E = c(2,2) %*% rez = 2 * Ra
         
         # weighted regression
-        tmpA = 2 * ((Ra - Rd)*Nd + (Ra - Rm)*Nm*2) / (Nd + Nm*4);
+        tmpA = 2 * ((Ra - Rd) * ti$Nd + (Ra - Rm) * ti$Nm*2) / (ti$Nd + 4 * ti$Nm);
         acelist[[3]] = cbind(
             A = tmpA,
             C = 0,
@@ -198,7 +193,7 @@ EstimateACE_SqD = function(gene, cvrt, twininfo){
             ace = acelist[[i]];
             
             # calculate the misfit (SSE for the model - SSE of best fit).
-            mft = (ace %*% ace2rrr - bstmean)^2 %*% c(Nm, Nd, (N^2 - N)/2 - Nm - Nd);
+            mft = (ace %*% ace2rrr - bstmean)^2 %*% c(ti$Nm, ti$Nd, (ti$N^2 - ti$N)/2 - ti$Nm - ti$Nd);
             mft[rowSums(ace<0) > 0L] = +Inf;
             
             set = which(mft < bestmft);
@@ -214,7 +209,8 @@ EstimateACE_SqD = function(gene, cvrt, twininfo){
  
     rm(acelist);
     rm(Rm, Rd, Ra);
-    rm(idsMZ1, idsMZ2, idsDZ1, idsDZ2, Nm, Nd, N);
+    rm(ti);
+    # rm(idsMZ1, idsMZ2, idsDZ1, idsDZ2, Nm, Nd, N);
 
     return(bestace);   
 }
@@ -541,37 +537,27 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     # Process twininfo
     {
         message("Parsing twininfo parameter") 
-
         ti = .ProcessTwininfo(twininfo = twininfo, colnames(gene));
-        for( nm in names(ti) ) 
-            assign(x = nm, value = ti[[nm]]);
-        rm(nm, ti);
-    } # idsMZ1, idsMZ2, idsDZ1, idsDZ2, idsS, Nm, Nd, N
-    
-    
+    } # ti with (idsMZ1, idsMZ2, idsDZ1, idsDZ2, idsS, Nm, Nd, N)
+
     # Perform ACE model estimation, using SqD method
     {
         ace = EstimateACE_SqD(gene = gene, cvrt = cvrt, twininfo = twininfo);
         
-        # Get corr(T1,T2) from bestace
-        {
-            ace = ace / rowSums(ace);
-            
-            # rhoMZ = ace %*% c(1,   1, 0);
-            # rhoDZ = ace %*% c(0.5, 1, 0);
-            # corrT1T2 = (Nd * rhoDZ + 2 * Nm * rhoMZ) / N;
-            corrT1T2 = as.vector(ace %*% ((Nd * c(1, 1, 0) + 2 * Nm * c(0.5, 1, 0)) / N));
-            
-            # cor(as.vector(tt1), as.vector(tt2))
-            # [1] 0.2177539
-            # > mean(corrT1T2)
-            # [1] 0.2186725
-            ttmultiplier = 1 / sqrt(2 + 2 * corrT1T2);
-            rm(corrT1T2);
-            rm(ace);
-        } # ttmultiplier
+        ace = ace / rowSums(ace);
         
-        # cleanup
+        # rhoMZ = ace %*% c(1,   1, 0);
+        # rhoDZ = ace %*% c(0.5, 1, 0);
+        # corrT1T2 = (Nd * rhoDZ + 2 * Nm * rhoMZ) / N;
+        corrT1T2 = as.vector(ace %*% ((ti$Nd * c(1, 1, 0) + 2 * ti$Nm * c(0.5, 1, 0)) / ti$N));
+        
+        # cor(as.vector(tt1), as.vector(tt2))
+        # [1] 0.2177539
+        # > mean(corrT1T2)
+        # [1] 0.2186725
+        
+        ttmultiplier = 1 / sqrt(2 + 2 * corrT1T2);
+        rm(corrT1T2, ace);
     } # ttmultiplier
     
     # Split the samples into 2 groups, each without related individuals
@@ -579,19 +565,19 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         message("Splitting data into two groups of independent samples") 
         
         # split the data (Avoid R stupidity with ifs
-        if( length(idsS) == 0 ){
+        if( length(ti$idsS) == 0 ){
             idsS1 = c();
             idsS2 = c();
-        } else if( length(idsS) == 1 ){
-            idsS1 = idsS;
+        } else if( length(ti$idsS) == 1 ){
+            idsS1 = ti$idsS;
             idsS2 = c();
         } else {
-            idsS1 = idsS[seq(from = 1, to = length(idsS), by = 2)];
-            idsS2 = idsS[seq(from = 2, to = length(idsS), by = 2)];
+            idsS1 = ti$idsS[seq(from = 1, to = length(ti$idsS), by = 2)];
+            idsS2 = ti$idsS[seq(from = 2, to = length(ti$idsS), by = 2)];
         }
         
-        ids1 = c(idsMZ1, idsDZ1, idsS1);
-        ids2 = c(idsMZ2, idsDZ2, idsS2);
+        ids1 = c(ti$idsMZ1, ti$idsDZ1, idsS1);
+        ids2 = c(ti$idsMZ2, ti$idsDZ2, idsS2);
         rm(idsS1, idsS2);
         
         stopifnot( all(sort(c(ids1, ids2)) == 1:ncol(gene)) );
@@ -606,7 +592,7 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
             cvrt1 = NULL;
             cvrt2 = NULL;
         }
-    } # gene1, cvrt1, gene2, cvrt2
+    } # ids1, ids2, gene1, cvrt1, gene2, cvrt2
 
     # Preprocess set 1 (gene1, cvrt1)
     {
@@ -707,7 +693,6 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         rm(dfFull1, testfn1, dfFull2, testfn2, absthr, pvfun)
     } # collect*
     
-    rm(idsMZ1, idsMZ2, idsDZ1, idsDZ2, Nm, Nd, N);
     rm(ttmultiplier);
     rm(gene1, cvrt1, gene2, cvrt2, zcvrt1, zcvrt2); # snps1, snps2
     
@@ -724,17 +709,28 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         }
         levels(gene.factor) = rownames(gene);
         class(gene.factor) = 'factor';
+        rm(collect.geneid);
         
         # SNPs names factor
         snps.factor = unlist(collect.snpsid, recursive = FALSE, use.names = FALSE);
         levels(snps.factor) = rownames(snps);
         class(snps.factor) = 'factor';
+        rm(collect.snpsid);
+        
+        # Z-scores
+        zscore = unlist(collect.zscore, recursive = FALSE, use.names = FALSE);
+        rm(collect.zscore);
+        
+        # P-values
+        pvalue = unlist(collect.pvalue, recursive = FALSE, use.names = FALSE);
+        rm(collect.pvalue);
         
         results = data.frame(
             gene = gene.factor,
             snps = snps.factor,
-            zscore = unlist(collect.zscore, recursive = FALSE, use.names = FALSE),
-            pvalue = unlist(collect.pvalue, recursive = FALSE, use.names = FALSE));
+            zscore = zscore,
+            pvalue = pvalue);
+        rm(gene.factor, snps.factor, zscore, pvalue);
     } # results
     
     return(results);
