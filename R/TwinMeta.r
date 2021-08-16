@@ -271,7 +271,7 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, M
         # sim = TwinMeta_simulate( Nm = 10, Nd = 10, Ns = 10, Ngene = 1000, Nsnps = 1000, Ncvrt = 10)
     }
     
-    # Checks
+    # Checks and defaults
     {
         stopifnot(length(Nm) == 1);
         stopifnot(is.numeric(Nm));
@@ -312,9 +312,9 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, M
         stopifnot(Nm + Nd + Ns >= 1);
         
         if( is.null(ACEparam) ){
-            a = 3 + 3 * runif(Ngene);
-            c = 4 + 4 * runif(Ngene);
-            e = 5 + 4 * runif(Ngene);
+            A = 3 + 3 * runif(Ngene);
+            C = 4 + 4 * runif(Ngene);
+            E = 5 + 4 * runif(Ngene);
         } else {
             stopifnot( is.numeric(ACEparam) );
             stopifnot(all( ACEparam >= 0 ));
@@ -324,17 +324,17 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, M
                 stopifnot( nrow(ACEparam) == Ngene );
                 stopifnot( ncol(ACEparam) == 3 );
                 
-                a = sqrt(ACEparam[,1]);
-                c = sqrt(ACEparam[,2]);
-                e = sqrt(ACEparam[,3]);
+                A = ACEparam[,1];
+                C = ACEparam[,2];
+                E = ACEparam[,3];
                 
             } else {
                 
                 stopifnot( length(ACEparam) == 3 )
                 
-                a = sqrt(ACEparam[1]);
-                c = sqrt(ACEparam[2]);
-                e = sqrt(ACEparam[3]);
+                A = ACEparam[1];
+                C = ACEparam[2];
+                E = ACEparam[3];
                 
             }
         }
@@ -374,46 +374,54 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, M
         # stopifnot(tail(idsS,1) == N)
     } # idsMZ1, idsMZ2, idsDZ1, idsDZ2, idsS  
     
+    
     # Generate Gene expression
     {
         message("Gene: Start generating gene expression")
+        gene = matrix(0, Ngene, N);
+        
+        # cov(tmp1, tmp2) = sqrt(vr) * (cv/vr) * sqrt(vr) = cv;
+        # var( (cv/vr) * tmp1 ) = vr * (cv/vr)^2 = cv^2 / vr
 
-        # Genotype effect component
-        message("Gene: Generating A component")
-        A = matrix(0, Ngene, N);
-        A[,-idsMZ2] = rnorm(Ngene*as.numeric(N-Nm))*a;
+        message("Gene: Generating MZ sample pairs")
+        vr = A + C + E;
+        cv = A + C;
+        for( i in seq_along(idsMZ1) ){ # i = 1
+            tmp1 = rnorm(Ngene) * sqrt(vr);
+            tmp2 = (cv/vr) * tmp1 + sqrt(vr - cv^2 / vr) * rnorm(Ngene) ;
+            gene[, idsMZ1[i]] = tmp1;
+            gene[, idsMZ2[i]] = tmp2;
+            rm(tmp1, tmp2);
+        }
+        rm(i, cv);
         
-        A[,idsMZ2] = A[,idsMZ1];
-        A[,idsDZ2] = A[,idsDZ1] * 0.5 + sqrt(0.75) * A[,idsDZ2];
+        message("Gene: Generating DZ sample pairs")
+        cv = A/2 + C;
+        for( i in seq_along(idsDZ1) ){ # i = 1
+            tmp1 = rnorm(Ngene) * sqrt(vr);
+            tmp2 = (cv/vr) * tmp1 + sqrt(vr - cv^2 / vr) * rnorm(Ngene) ;
+            gene[, idsDZ1[i]] = tmp1;
+            gene[, idsDZ2[i]] = tmp2;
+            rm(tmp1, tmp2);
+        }
+        rm(i, cv);
+        
+        message("Gene: Generating singletop samples")
+        for( i in seq_along(idsS) ){ # i = 1
+            gene[, idsS[i]] = rnorm(Ngene) * sqrt(vr);
+        }
+        rm(i);
 
-        # cor(c(A[,idsDZ1]), c(A[,idsDZ2]))
-        # cor(c(A[,idsMZ1]), c(A[,idsMZ2]))
-        
-        message("Gene: Generating C component")
-        C = matrix(0, Ngene, N);
-        C[,-c(idsMZ2,idsDZ2)] = rnorm(Ngene*as.numeric(N-Nm-Nd))*c;
-        
-        C[,idsMZ2] = C[,idsMZ1];
-        C[,idsDZ2] = C[,idsDZ1];
-        
-        # cor(c(C[,idsDZ1]), c(C[,idsDZ2]))
-        # cor(c(C[,idsMZ1]), c(C[,idsMZ2]))
-        
-        message("Gene: Generating E component");
-        E = rnorm(Ngene*as.numeric(N))*e;
-        dim(E) = c(Ngene, N);
-        
-        message("Gene: Generating gene expression as A+C+E")
-        gene = A + C + E;
+        message("Gene: Setting row and column names")
         colnames(gene) = sprintf("Sample_%06d", seq_len(N));
         rownames(gene) = sprintf("Gene_%06d", seq_len(Ngene));
         
+        rm(vr);
         rm(A, C, E);
-        rm(a, c, e);
-        
+
         message("Gene: Done generating gene expression")
-    }
-    
+    } # gene
+
     # Generate genotypes
     {
         message("SNPs: Start generating genotypes")
