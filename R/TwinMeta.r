@@ -347,7 +347,7 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, M
             stopifnot(all( MAF <= 1 ));
             stopifnot( length(MAF) %in% c(1, Nsnps) );
         }
-    }
+    } # A, C, E, MAF
     
     # Make integers
     {
@@ -357,7 +357,7 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, M
         Ngene = as.integer(Ngene);
         Nsnps = as.integer(Nsnps);
         Ncvrt = as.integer(Ncvrt);
-    }
+    } # Nm, Nd, Ns, Ngene, Nsnps, Ncvrt
     
     # Total number of samples
     N = 2L * Nm + 2L * Nd + Ns;
@@ -373,12 +373,11 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, M
         # stopifnot(c(idsMZ1,idsMZ2,idsDZ1,idsDZ2,idsS) == seq_len(N));
         # stopifnot(tail(idsS,1) == N)
     } # idsMZ1, idsMZ2, idsDZ1, idsDZ2, idsS  
-    
-    
+
     # Generate Gene expression
     {
         message("Gene: Start generating gene expression")
-        gene = matrix(0, Ngene, N);
+        gene = matrix(NA_real_, Ngene, N);
         
         # cov(tmp1, tmp2) = sqrt(vr) * (cv/vr) * sqrt(vr) = cv;
         # var( (cv/vr) * tmp1 ) = vr * (cv/vr)^2 = cv^2 / vr
@@ -406,7 +405,7 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, M
         }
         rm(i, cv);
         
-        message("Gene: Generating singletop samples")
+        message("Gene: Generating singleton samples")
         for( i in seq_along(idsS) ){ # i = 1
             gene[, idsS[i]] = rnorm(Ngene) * sqrt(vr);
         }
@@ -497,7 +496,7 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, M
         colnames(cvrt) = colnames(gene);
         rownames(cvrt) = sprintf("Covt_%06d", seq_len(Ncvrt));
         message("Cvrt: Done generating covariates") 
-    }
+    } # cvrt
     
     # Generate twininfo
     {
