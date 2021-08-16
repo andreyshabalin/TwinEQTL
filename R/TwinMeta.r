@@ -425,37 +425,53 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, M
     # Generate genotypes
     {
         message("SNPs: Start generating genotypes")
-        message("SNPs: Generating MAF for each SNP") 
-        # MAF = runif(Nsnps)^2*0.49+0.01;
-        # A1 = rbinom(Nsnps*N, size = 1, prob = maf);
-        
-        message("SNPs: Generating Allele 1 with given MAF");
-        A1 = matrix(NA_integer_, Nsnps, N);
-        A1[,-c(idsMZ2,idsDZ2)] = as.integer(runif(Nsnps * as.numeric(N - Nm - Nd)) < MAF);
+        snps = matrix(NA_integer_, Nsnps, N);
 
-        message("SNPs: Generating Allele 2 with given MAF");
-        A2 = matrix(NA_integer_, Nsnps, N);
-        A2[,-idsMZ2] = as.integer(runif(Nsnps * as.numeric(N - Nm)) < MAF);
+        message("SNPs: Generating DZ sample pairs")
+        for( i in seq_along(idsDZ1) ){ # i = 1
+            a1 = as.integer(runif(Nsnps) < MAF);
+            a2 = as.integer(runif(Nsnps) < MAF);
+            a3 = as.integer(runif(Nsnps) < MAF);
+
+            snps[, idsDZ1[i]] = a1 + a2;
+            snps[, idsDZ2[i]] = a2 + a3;
+            rm(a1, a2, a3);
+        }
+        rm(i);
         
-        # system.time({ A1 = rbinom(Nsnps*N, size = 1, prob = MAF); dim(A1) = c(Nsnps, N); })
-        # system.time({ A1 = as.integer(runif(Nsnps*N) < MAF); dim(A1) = c(Nsnps, N); })
+        message("SNPs: Generating MZ sample pairs")
+        # probs: MAF^2, 2*MAF*(1-MAF), (1 - MAF)^2
+        # 2: MAF^2
+        # 1: MAF^2 + 2*MAF*(1-MAF) = 2 * MAF - MAF^2
+        # 0: Otherwise
+        thr2 = MAF^2;
+        thr1 = 2 * MAF - MAF^2;
+        for( i in seq_along(idsMZ1) ){ # i = 1
+            
+            tmp = runif(Nsnps);
+            snp = integer(Nsnps);
+            snp[tmp < thr1] = 1L;
+            snp[tmp < thr2] = 2L;
+                  
+            snps[, idsMZ1[i]] = snp;
+            snps[, idsMZ2[i]] = snp;
+            rm(tmp, snp);
+        }
+        rm(i);
         
-        # A1[1:10,1:10]
-        # as.matrix(MAF[1:10])
+        message("SNPs: Generating singleton samples")
+        for( i in seq_along(idsS) ){ # i = 1
+            
+            tmp = runif(Nsnps);
+            snp = integer(Nsnps);
+            snp[tmp < thr1] = 1L;
+            snp[tmp < thr2] = 2L;
+            
+            snps[, idsS[i]] = snp;
+            rm(tmp, snp);
+        }
+        rm(i, thr1, thr2);
         
-        message("SNPs: Generating SNP matrix");
-        snps = matrix(-1L, nrow = Nsnps, ncol = N);
-        
-        message("SNPs: Filling SNP matrix for MZ twins");
-        snps[,idsMZ1] = A1[,idsMZ1] + A2[,idsMZ1];
-        snps[,idsMZ2] = snps[,idsMZ1];
-        
-        message("SNPs: Filling SNP matrix for DZ twins");
-        snps[,idsDZ1] = A1[,idsDZ1] + A2[,idsDZ1];
-        snps[,idsDZ2] = A1[,idsDZ1] + A2[,idsDZ2];
-        
-        message("SNPs: Filling SNP matrix for Singletons");
-        snps[,idsS  ] = A1[,idsS  ] + A2[,idsS  ];
         
         # min(snps)
         # 
@@ -464,14 +480,14 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, M
         # 
         # cor(c(snps[,c(idsMZ1,idsDZ1)]),c(snps[,idsS]))
         
+        message("SNPs: Setting row and column names")
         colnames(snps) = colnames(gene);
         rownames(snps) = sprintf("Snp_%06d", seq_len(Nsnps));
         
-        # rm(MAF);
-        rm(A1, A2);
+        rm(MAF);
         
         message("SNPs: Done generating genotypes")
-    }
+    } # snps
     
     # Covariates
     {
