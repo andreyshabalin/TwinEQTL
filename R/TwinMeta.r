@@ -56,7 +56,26 @@
     return(slice);
 }
 
-.EstimateACE = function(gene, cvrt, twininfo){
+EstimateACE_SqD = function(gene, cvrt, twininfo){
+    
+    # Checks
+    {
+        # gene
+        stopifnot( is.matrix(gene) );
+        stopifnot( is.numeric(gene) );
+        stopifnot( all(is.finite(gene)) );
+        stopifnot( nrow(gene) > 0 );
+        stopifnot( ncol(gene) > 0 );
+        
+        # cvrt
+        if( NROW(cvrt) > 0 ){
+            stopifnot( is.matrix(cvrt) );
+            stopifnot( is.numeric(cvrt) );
+            stopifnot( all(is.finite(cvrt)) );
+            
+            stopifnot( ncol(gene) == ncol(cvrt) );
+        }
+    }
     
     # Process twininfo
     {
@@ -471,57 +490,6 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, M
     return(list(gene = gene, snps = snps, cvrt = cvrt, twininfo = twininfo));
 }
 
-if(FALSE){
-
-    devtools::install_github("andreyshabalin/TwinMeta@main")
-
-    # library(TwinMeta);
-    set.seed(18090212+1)
-    
-    Nm = 1000; Nd = 2000; Ns = 3000; Ngene = 1000; Nsnps = 8; Ncvrt = 1;
-    
-    ACEparam = c(3,4,5);
-    sim = TwinMeta_simulate(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = ACEparam);
-    ace = .EstimateACE(gene = sim$gene, cvrt = sim$cvrt, twininfo = sim$twininfo);
-    ace = ace / rowSums(ace) * sum(ACEparam);
-    
-    hist(ace[,1], 100); abline(v = ACEparam[1], col = 'red');
-    hist(ace[,2], 100); abline(v = ACEparam[2], col = 'red');
-    hist(ace[,3], 100); abline(v = ACEparam[3], col = 'red');
-    
-    
-    
-    # gene = sim$gene; snps = sim$snps; cvrt = sim$cvrt; twininfo = sim$twininfo; 
-    pvthreshold = 1#000 / (nrow(sim$snps) * nrow(sim$gene));
-    # rm(sim)
-    
-    {
-        tic = proc.time();
-        eqtls = TwinMeta_testAll(
-            gene = sim$gene,
-            snps = sim$snps,
-            cvrt = sim$cvrt,
-            twininfo = sim$twininfo,
-            pvthreshold = pvthreshold);
-        toc = proc.time();
-        show(toc - tic);
-    }
-    
-    
-    
-    # 423.11 secs for N = 9000, Ngene = 10000, Nsnps = 80000, Ncvrt = 0, pvthreshold = 1
-    # 271.86 secs for N = 9000, Ngene = 10000, Nsnps = 80000, Ncvrt = 0, pvthreshold = 1000 / (nrow(sim$snps) * nrow(sim$gene))
-    
-    # 1.85 seconds for N = 9000, Ngene = 1000, Nsnps = 1000, Ncvrt = 10, pvthreshold = 1000 / (nrow(snps)*nrow(gene))
-    # 1.93 seconds for N = 9000, Ngene = 1000, Nsnps = 1000, Ncvrt = 10, pvthreshold = 1000 / (nrow(snps)*nrow(gene))
-    
-    # 8.51 seconds for N = 9000, Ngene = 1000, Nsnps = 10000, Ncvrt = 10, pvthreshold = 1000 / (nrow(snps)*nrow(gene))
-
-    head(eqtls)
-    
-    hist(eqtls$pvalue, 100)
-}
-
 # Main function for eQTL testing on twins
 TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     
@@ -583,7 +551,7 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     
     # Perform ACE model estimation, using SqD method
     {
-        ace = .EstimateACE(gene = gene, cvrt = cvrt, twininfo = twininfo);
+        ace = EstimateACE_SqD(gene = gene, cvrt = cvrt, twininfo = twininfo);
         
         # Get corr(T1,T2) from bestace
         {
