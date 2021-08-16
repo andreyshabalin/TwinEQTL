@@ -41,7 +41,7 @@
 	}
 }
 \details{
-	Note that the columns of \code{gene}, \code{snps}, and \code{cvrt1} (if not \code{NULL}) must match.
+	Note that the columns of \code{gene}, \code{snps}, and \code{cvrt} (if not \code{NULL}) must match.
 }
 \value{
 	Returns data frame with the significant associations (z-scores and p-values).
