@@ -1,9 +1,9 @@
 ### Format a number with comma delimited thousands
 .s = function(x){
-    formatC(x = x, 
+    trimws(formatC(x = x, 
             digits = ceiling(log10(max(x)+1)),
             big.mark = ',',
-            big.interval = 3)
+            big.interval = 3))
 }
 
 # "pmax" function that can handle empty array
