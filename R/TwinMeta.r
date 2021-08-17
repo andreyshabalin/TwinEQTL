@@ -692,10 +692,11 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
             {
                 tt1 = testfn1(tcrossprod(gene1, slice1));
                 tt2 = testfn2(tcrossprod(gene2, slice2));
+                rm(slice1, slice2);
                 
                 zstat = (tt1 + tt2) * ttmultiplier;
-                abszz = abs(zstat);
                 rm(tt1,tt2);
+                abszz = abs(zstat);
                 # qqnorm(as.vector(zstat))
             } # zstat, abszz
             
@@ -709,8 +710,8 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
                     collect.pvalue[[part]] = pvfun(abszz[selected]);
                 }
                 rm(selected);
+                rm(zstat, abszz)
             } # collect.* updated
-            rm(slice1, slice2, zstat, abszz)
         }
         rm(part, blocksize, Nsnps, nsteps, fr, to);
         rm(dfFull1, testfn1, dfFull2, testfn2, absthr, pvfun)
