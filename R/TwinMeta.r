@@ -719,6 +719,7 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     
     rm(ttmultiplier);
     rm(gene1, cvrt1, gene2, cvrt2, zcvrt1, zcvrt2); # snps1, snps2
+    rm(ids1, ids2);
     
     # Form the resulting data frame
     {
