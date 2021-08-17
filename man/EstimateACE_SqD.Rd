@@ -66,7 +66,7 @@ Ns = 3000
 # Number of genes
 Ngene = 1000
 
-# Number of SNPs (minimal, as we don't need genotypes)
+# Number of SNPs (minimal, as we do not need genotypes)
 Nsnps = 1
 
 # Number of covariates
@@ -85,14 +85,14 @@ ace = EstimateACE_SqD(gene = sim$gene, cvrt = sim$cvrt, twininfo = sim$twininfo)
 ace = ace / rowSums(ace) * sum(ACEparam)
 
 # Look at the distribution of A estimates
-hist(ace[,1], 40, col = 'lightblue', main = 'Estimates of A')
-abline(v = ACEparam[1], lwd = 3, col = 'red')
+hist(ace[,1], 40, col = "lightblue", main = "Estimates of A")
+abline(v = ACEparam[1], lwd = 3, col = "red")
 
 # Look at the distribution of C estimates
-hist(ace[,2], 40, col = 'lightblue', main = 'Estimates of C')
-abline(v = ACEparam[2], lwd = 3, col = 'red')
+hist(ace[,2], 40, col = "lightblue", main = "Estimates of C")
+abline(v = ACEparam[2], lwd = 3, col = "red")
 
 # Look at the distribution of E estimates
-hist(ace[,3], 40, col = 'lightblue', main = 'Estimates of E')
-abline(v = ACEparam[3], lwd = 3, col = 'red')
+hist(ace[,3], 40, col = "lightblue", main = "Estimates of E")
+abline(v = ACEparam[3], lwd = 3, col = "red")
 }

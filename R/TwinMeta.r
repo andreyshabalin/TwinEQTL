@@ -2,7 +2,7 @@
 .s = function(x){
     trimws(formatC(x = x, 
             digits = ceiling(log10(max(x)+1)),
-            big.mark = ',',
+            big.mark = ",",
             big.interval = 3))
 }
 
@@ -105,7 +105,7 @@ EstimateACE_SqD = function(gene, cvrt, twininfo){
         # head(cbind(Rm, Rd, Ra))
     } # Rm, Rd, Ra
     
-    acelist = vector('list', 4);
+    acelist = vector("list", 4);
     
     # Estimate model with A,C,E all included
     {
@@ -663,17 +663,17 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         
         # Create .listBuilder objects to collect results
         {
-            collect.geneid = vector('list', nsteps);
-            collect.snpsid = vector('list', nsteps);
-            collect.zscore = vector('list', nsteps);
-            collect.pvalue = vector('list', nsteps);
+            collect.geneid = vector("list", nsteps);
+            collect.snpsid = vector("list", nsteps);
+            collect.zscore = vector("list", nsteps);
+            collect.pvalue = vector("list", nsteps);
         } # collect.geneid, collect.snpsid, collect.zscore, collect.pvalue
         
         for( part in seq_len(nsteps) ){ # part = 1L
             fr = (part-1L)*blocksize + 1L;
             to = min(part*blocksize, Nsnps);
             
-            message('Testing SNPs ', .s(fr), ' - ', .s(to), ' of ', .s(Nsnps), '. ', round(100*to/Nsnps,2), '%');
+            message("Testing SNPs ", .s(fr), " - ", .s(to), " of ", .s(Nsnps), ". ", round(100*to/Nsnps,2), "%");
             
             
             # Extract SNP slices
@@ -723,23 +723,22 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     
     # Form the resulting data frame
     {
-        message('Collecting findings in a data frame')
+        message("Collecting findings in a data frame")
         
         # gene names factor
         gene.factor = unlist(collect.geneid, recursive = FALSE, use.names = FALSE);
         if( length(gene.factor) == 0 ){
-            # message('No significant associations found at pvthreshold = ', pvthreshold);
-            warning('No significant associations found at pvthreshold = ', pvthreshold);
+            warning("No significant associations found at pvthreshold = ", pvthreshold);
             return(data.frame(gene = character(), snps = character(), zscore = numeric(0), pvalue = numeric(0)));
         }
         levels(gene.factor) = rownames(gene);
-        class(gene.factor) = 'factor';
+        class(gene.factor) = "factor";
         rm(collect.geneid);
         
         # SNPs names factor
         snps.factor = unlist(collect.snpsid, recursive = FALSE, use.names = FALSE);
         levels(snps.factor) = rownames(snps);
-        class(snps.factor) = 'factor';
+        class(snps.factor) = "factor";
         rm(collect.snpsid);
         
         # Z-scores
