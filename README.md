@@ -55,7 +55,7 @@ Nsnps = 1000
 Ncvrt = 10
 
 # Gerenate artificial data
-sim = TwinMeta_simulate( Nm, Nd, Ns, Ngene, Nsnps, Ncvrt);
+sim = TwinMeta_simulate(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt)
 
 # Pick a p-value threshold
 pvthreshold = 1000 / (Ngene * Nsnps)
