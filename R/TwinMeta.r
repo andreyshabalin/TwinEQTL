@@ -1,6 +1,6 @@
 ### Format a number with comma delimited thousands
 .s = function(x){
-    trimws(formatC(x = x, 
+    trimws(formatC(x = x,
             digits = ceiling(log10(max(x)+1)),
             big.mark = ",",
             big.interval = 3))
@@ -12,7 +12,7 @@
         return(x)
     } else {
         return(pmax.int(x, val));
-    }    
+    }
 }
 
 # Avoid creating zero p-values
@@ -79,24 +79,21 @@ EstimateACE_SqD = function(gene, cvrt, twininfo){
     
     # Process twininfo
     {
-        message("Parsing twininfo parameter") 
-        ti = .ProcessTwininfo(twininfo = twininfo, colnames(gene));
+        message("Parsing twininfo parameter");
+        ti = .ProcessTwininfo(twininfo = twininfo, colnms = colnames(gene));
     } # ti with (idsMZ1, idsMZ2, idsDZ1, idsDZ2, idsS, Nm, Nd, N)
 
     # Residualize and standardize gene expression data
     {
-        message("Orthonormalizing covariates");
-        zcvrt = .orthonormalizeCovariates(cvrt, gene);
-        
         message("Residualizing gene expression data");
+        zcvrt = .orthonormalizeCovariates(cvrt, gene);
         gene = .ResidualizeSlice(gene, zcvrt);
-        
         rm(zcvrt);
-    } # gene, -zcvrt
+    } # gene
     
-    message("Estimating ACE model for each gene") 
+    message("Estimating ACE model for each gene");
     
-    # Get mean squares
+    # Get mean squared differences (Mm - between MZ twins, Md - DZ twins, Ra - all other pairs)
     {
         Rm = rowMeans((gene[,ti$idsMZ1, drop = FALSE] - gene[,ti$idsMZ2, drop = FALSE])^2)/2; # var of MZ pair differences / 2
         Rd = rowMeans((gene[,ti$idsDZ1, drop = FALSE] - gene[,ti$idsDZ2, drop = FALSE])^2)/2; # var of DZ pair differences / 2
@@ -153,7 +150,7 @@ EstimateACE_SqD = function(gene, cvrt, twininfo){
         # 2*A + 2*E = c(2,2) %*% rez = 2 * Ra
         
         # weighted regression
-        tmpA = 2 * ((Ra - Rd) * ti$Nd + (Ra - Rm) * ti$Nm*2) / (ti$Nd + 4 * ti$Nm);
+        tmpA = 2 * ((Ra - Rd) * ti$Nd + (2 * ti$Nm) * (Ra - Rm)) / (ti$Nd + 4 * ti$Nm);
         acelist[[3]] = cbind(
             A = tmpA,
             C = 0,
@@ -183,7 +180,6 @@ EstimateACE_SqD = function(gene, cvrt, twininfo){
         # best group averages
         bstmean = 2 * cbind(Rm, Rd, Ra);
         
-        
         bestace = matrix(NA_real_, nrow = nrow(gene), ncol = 3);
         bestmft = rep(+Inf, nrow(gene));
         
@@ -206,11 +202,10 @@ EstimateACE_SqD = function(gene, cvrt, twininfo){
         rm(i);
         rm(ace2rrr, bstmean, bestmft);
     }
- 
+    
     rm(acelist);
     rm(Rm, Rd, Ra);
     rm(ti);
-    # rm(idsMZ1, idsMZ2, idsDZ1, idsDZ2, Nm, Nd, N);
 
     return(bestace);   
 }
@@ -227,8 +222,8 @@ EstimateACE_SqD = function(gene, cvrt, twininfo){
         stopifnot( all(twininfo[[3]] %in% c("DZ","MZ")) );
     }
 
-    twininfo1 = match(twininfo[[1]], colnms)
-    twininfo2 = match(twininfo[[2]], colnms)
+    twininfo1 = match(twininfo[[1]], colnms);
+    twininfo2 = match(twininfo[[2]], colnms);
     
     MZset = which(twininfo[[3]] == "MZ");
     idsMZ1 = twininfo1[MZset];
@@ -252,62 +247,43 @@ EstimateACE_SqD = function(gene, cvrt, twininfo){
 # Generate artificial data set for testing the package
 TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, MAF = NULL){
 
-    # Default parameters
-    if(FALSE){
-        Nm = 1000
-        Nd = 2000
-        Ns = 3000
-        
-        Ngene = 10000
-        Nsnps = 100000
-        Ncvrt = 10
-        
-        ACEparam = c(3,4,5);
-        ACEparam = matrix(data = runif(Ngene*3), nrow = Ngene, ncol = 3);
-        
-        MAF = 0.2;
-        MAF = runif(Nsnps)^2*0.49+0.01;
-            
-        # sim = TwinMeta_simulate( Nm = 10, Nd = 10, Ns = 10, Ngene = 1000, Nsnps = 1000, Ncvrt = 10)
-    }
-    
     # Checks and defaults
     {
         stopifnot(length(Nm) == 1);
         stopifnot(is.numeric(Nm));
         stopifnot(is.finite(Nm));
         stopifnot(Nm >= 0);
-        stopifnot(Nm == as.integer(Nm))
+        stopifnot(Nm == as.integer(Nm));
         
         stopifnot(length(Nd) == 1);
         stopifnot(is.numeric(Nd));
         stopifnot(is.finite(Nd));
         stopifnot(Nd >= 0);
-        stopifnot(Nd == as.integer(Nd))
+        stopifnot(Nd == as.integer(Nd));
 
         stopifnot(length(Ns) == 1);
         stopifnot(is.numeric(Ns));
         stopifnot(is.finite(Ns));
         stopifnot(Ns >= 0);
-        stopifnot(Ns == as.integer(Ns))
+        stopifnot(Ns == as.integer(Ns));
         
         stopifnot(length(Ngene) == 1);
         stopifnot(is.numeric(Ngene));
         stopifnot(is.finite(Ngene));
         stopifnot(Ngene >= 1);
-        stopifnot(Ngene == as.integer(Ngene))
+        stopifnot(Ngene == as.integer(Ngene));
         
         stopifnot(length(Nsnps) == 1);
         stopifnot(is.numeric(Nsnps));
         stopifnot(is.finite(Nsnps));
         stopifnot(Nsnps >= 1);
-        stopifnot(Nsnps == as.integer(Nsnps))
+        stopifnot(Nsnps == as.integer(Nsnps));
         
         stopifnot(length(Ncvrt) == 1);
         stopifnot(is.numeric(Ncvrt));
         stopifnot(is.finite(Ncvrt));
         stopifnot(Ncvrt >= 0);
-        stopifnot(Ncvrt == as.integer(Ncvrt))
+        stopifnot(Ncvrt == as.integer(Ncvrt));
         
         stopifnot(Nm + Nd + Ns >= 1);
         
@@ -330,7 +306,7 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, M
                 
             } else {
                 
-                stopifnot( length(ACEparam) == 3 )
+                stopifnot( length(ACEparam) == 3 );
                 
                 A = ACEparam[1];
                 C = ACEparam[2];
@@ -349,7 +325,7 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, M
         }
     } # A, C, E, MAF
     
-    # Make integers
+    # Make parameters integers and calculate total number of samples
     {
         Nm = as.integer(Nm);
         Nd = as.integer(Nd);
@@ -357,32 +333,29 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, M
         Ngene = as.integer(Ngene);
         Nsnps = as.integer(Nsnps);
         Ncvrt = as.integer(Ncvrt);
-    } # Nm, Nd, Ns, Ngene, Nsnps, Ncvrt
-    
-    # Total number of samples
-    N = 2L * Nm + 2L * Nd + Ns;
-    
+        N = 2L * Nm + 2L * Nd + Ns;
+    } # Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, N
+
     # Generate set ids
     {
-        idsMZ1 = seq_len(Nm)
-        idsMZ2 = seq_len(Nm) + Nm;
+        idsMZ1 = seq_len(Nm);
+        idsMZ2 = seq_len(Nm) +   Nm;
         idsDZ1 = seq_len(Nd) + 2*Nm;
-        idsDZ2 = seq_len(Nd) + 2*Nm + Nd;
+        idsDZ2 = seq_len(Nd) + 2*Nm +   Nd;
         idsS   = seq_len(Ns) + 2*Nm + 2*Nd;
         
         # stopifnot(c(idsMZ1,idsMZ2,idsDZ1,idsDZ2,idsS) == seq_len(N));
-        # stopifnot(tail(idsS,1) == N)
-    } # idsMZ1, idsMZ2, idsDZ1, idsDZ2, idsS  
+    } # idsMZ1, idsMZ2, idsDZ1, idsDZ2, idsS
 
     # Generate Gene expression
     {
-        message("Gene: Start generating gene expression")
+        message("Gene: Start generating gene expression");
         gene = matrix(NA_real_, Ngene, N);
         
-        # cov(tmp1, tmp2) = sqrt(vr) * (cv/vr) * sqrt(vr) = cv;
+        # cov(tmp1, tmp2) = sqrt(vr) * (cv/vr) * sqrt(vr) = cv
         # var( (cv/vr) * tmp1 ) = vr * (cv/vr)^2 = cv^2 / vr
 
-        message("Gene: Generating MZ sample pairs")
+        message("Gene: Generating MZ sample pairs");
         vr = A + C + E;
         cv = A + C;
         for( i in seq_along(idsMZ1) ){ # i = 1
@@ -394,7 +367,7 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, M
         }
         rm(i, cv);
         
-        message("Gene: Generating DZ sample pairs")
+        message("Gene: Generating DZ sample pairs");
         cv = A/2 + C;
         for( i in seq_along(idsDZ1) ){ # i = 1
             tmp1 = rnorm(Ngene) * sqrt(vr);
@@ -405,28 +378,28 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, M
         }
         rm(i, cv);
         
-        message("Gene: Generating singleton samples")
+        message("Gene: Generating singleton samples");
         for( i in seq_along(idsS) ){ # i = 1
             gene[, idsS[i]] = rnorm(Ngene) * sqrt(vr);
         }
         rm(i);
 
-        message("Gene: Setting row and column names")
+        message("Gene: Setting row and column names");
         colnames(gene) = sprintf("Sample_%06d", seq_len(N));
         rownames(gene) = sprintf("Gene_%06d", seq_len(Ngene));
         
         rm(vr);
         rm(A, C, E);
 
-        message("Gene: Done generating gene expression")
+        message("Gene: Done generating gene expression");
     } # gene
 
     # Generate genotypes
     {
-        message("SNPs: Start generating genotypes")
+        message("SNPs: Start generating genotypes");
         snps = matrix(NA_integer_, Nsnps, N);
 
-        message("SNPs: Generating DZ sample pairs")
+        message("SNPs: Generating DZ sample pairs");
         for( i in seq_along(idsDZ1) ){ # i = 1
             a1 = as.integer(runif(Nsnps) < MAF);
             a2 = as.integer(runif(Nsnps) < MAF);
@@ -438,7 +411,7 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, M
         }
         rm(i);
         
-        message("SNPs: Generating MZ sample pairs")
+        message("SNPs: Generating MZ sample pairs");
         # probs: MAF^2, 2*MAF*(1-MAF), (1 - MAF)^2
         # 2: MAF^2
         # 1: MAF^2 + 2*MAF*(1-MAF) = 2 * MAF - MAF^2
@@ -458,7 +431,7 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, M
         }
         rm(i);
         
-        message("SNPs: Generating singleton samples")
+        message("SNPs: Generating singleton samples");
         for( i in seq_along(idsS) ){ # i = 1
             
             tmp = runif(Nsnps);
@@ -479,23 +452,23 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, M
         # 
         # cor(c(snps[,c(idsMZ1,idsDZ1)]),c(snps[,idsS]))
         
-        message("SNPs: Setting row and column names")
+        message("SNPs: Setting row and column names");
         colnames(snps) = colnames(gene);
         rownames(snps) = sprintf("Snp_%06d", seq_len(Nsnps));
         
         rm(MAF);
         
-        message("SNPs: Done generating genotypes")
+        message("SNPs: Done generating genotypes");
     } # snps
     
     # Covariates
     {
-        message("Cvrt: Start generating covariates") 
+        message("Cvrt: Start generating covariates");
         cvrt = rnorm(Ncvrt*N);
         dim(cvrt) = c(Ncvrt, N);
         colnames(cvrt) = colnames(gene);
         rownames(cvrt) = sprintf("Covt_%06d", seq_len(Ncvrt));
-        message("Cvrt: Done generating covariates") 
+        message("Cvrt: Done generating covariates"); 
     } # cvrt
     
     # Generate twininfo
@@ -514,7 +487,7 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     
     # Checks
     {
-        message("Checking input parameters") 
+        message("Checking input parameters");
         
         # gene
         stopifnot( is.matrix(gene) );
@@ -559,7 +532,7 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     
     # Process twininfo
     {
-        message("Parsing twininfo parameter") 
+        message("Parsing twininfo parameter");
         ti = .ProcessTwininfo(twininfo = twininfo, colnames(gene));
     } # ti with (idsMZ1, idsMZ2, idsDZ1, idsDZ2, idsS, Nm, Nd, N)
 
@@ -585,15 +558,15 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     
     # Split the samples into 2 groups, each without related individuals
     {
-        message("Splitting data into two groups of independent samples") 
+        message("Splitting data into two groups of independent samples");
         
         # split the data (Avoid R stupidity with ifs
         if( length(ti$idsS) == 0 ){
-            idsS1 = c();
-            idsS2 = c();
+            idsS1 = integer();
+            idsS2 = integer();
         } else if( length(ti$idsS) == 1 ){
             idsS1 = ti$idsS;
-            idsS2 = c();
+            idsS2 = integer();
         } else {
             idsS1 = ti$idsS[seq(from = 1, to = length(ti$idsS), by = 2)];
             idsS2 = ti$idsS[seq(from = 2, to = length(ti$idsS), by = 2)];
@@ -619,7 +592,7 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
 
     # Preprocess set 1 (gene1, cvrt1)
     {
-        message("Residualizing gene expression data in set 1") 
+        message("Residualizing gene expression data in set 1");
 
         zcvrt1 = .orthonormalizeCovariates(cvrt1, gene1);
         gene1 = .ResidualizeSlice(gene1, zcvrt1);
@@ -627,7 +600,7 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     
     # Preprocess set 2 (gene2, cvrt2)
     {
-        message("Residualizing gene expression data in set 2") 
+        message("Residualizing gene expression data in set 2");
         
         zcvrt2 = .orthonormalizeCovariates(cvrt2, gene2);
         gene2 = .ResidualizeSlice(gene2, zcvrt2);
@@ -710,11 +683,11 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
                     collect.pvalue[[part]] = pvfun(abszz[selected]);
                 }
                 rm(selected);
-                rm(zstat, abszz)
+                rm(zstat, abszz);
             } # collect.* updated
         }
         rm(part, blocksize, Nsnps, nsteps, fr, to);
-        rm(dfFull1, testfn1, dfFull2, testfn2, absthr, pvfun)
+        rm(dfFull1, testfn1, dfFull2, testfn2, absthr, pvfun);
     } # collect*
     
     rm(ttmultiplier);
@@ -723,7 +696,7 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     
     # Form the resulting data frame
     {
-        message("Collecting findings in a data frame")
+        message("Collecting findings in a data frame");
         
         # gene names factor
         gene.factor = unlist(collect.geneid, recursive = FALSE, use.names = FALSE);
