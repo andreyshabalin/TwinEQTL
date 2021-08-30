@@ -544,8 +544,8 @@ TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
         
         # rhoMZ = ace %*% c(1,   1, 0);
         # rhoDZ = ace %*% c(0.5, 1, 0);
-        # corrT1T2 = (Nd * rhoDZ + 2 * Nm * rhoMZ) / N;
-        corrT1T2 = as.vector(ace %*% ((ti$Nd * c(1, 1, 0) + 2 * ti$Nm * c(0.5, 1, 0)) / ti$N));
+        # corrT1T2 = (ti$Nd * rhoDZ + 2 * ti$Nm * rhoMZ) / ti$N;
+        corrT1T2 = as.vector(ace %*% ((ti$Nd * c(0.5, 1, 0) + 2 * ti$Nm * c(1, 1, 0)) / ti$N));
         
         # cor(as.vector(tt1), as.vector(tt2))
         # [1] 0.2177539
