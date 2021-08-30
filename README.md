@@ -23,7 +23,7 @@ Our approaches provide a huge leap in terms of computing performance for GWAS da
 ## Install GitHub Version
 To install `TwinMeta` directly from GitHub, run
 
-```
+```r
 if(!requireNamespace("devtools", quietly = TRUE))
     install.packages("devtools")
 devtools::install_github("andreyshabalin/TwinMeta@main")
