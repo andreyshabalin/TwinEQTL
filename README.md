@@ -11,11 +11,10 @@ followed by an appropriate meta-analysis to combine the two non-independent test
 Our approaches provide a huge leap in terms of computing performance for GWAS data with twin pairs. 
 
 ## Key features
-1. Similar to meta-analysis, only summarized SNP level test statistics are necessary
-2. Fast alternative to linear mixed effect model with no inflation of type I error and negligible power loss
-3. Fast standard GWAS analysis for twin or correlated subjects
-4. Fast expression quantitative trait loci (eQTL) analysis for twin or correlated subjects
-5. Implemented as an easy-to-use R package similar to MatrixEQTL
+1. Fast alternative to linear mixed effect model with no inflation of type I error and negligible power loss
+2. Fast standard GWAS analysis for twin or correlated subjects
+3. Fast expression quantitative trait loci (eQTL) analysis for twin or correlated subjects
+4. Implemented as an easy-to-use R package similar to MatrixEQTL
 
 ## Install GitHub Version
 To install `TwinEQTL` directly from GitHub, run
