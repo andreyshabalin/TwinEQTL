@@ -43,14 +43,14 @@
 	Maintainer: Andrey A Shabalin <andrey.shabalin@gmail.com>
 }
 \references{
-	The package website: \url{https://github.com/andreyshabalin/TwinMeta}
+	The package website: \url{https://github.com/andreyshabalin/TwinEQTL}
 }
 \seealso{
 	The code below estimates ACE model parameters for 1000 genes and 
 	inspects of the distribution of the estimates.
 }
 \examples{
-library(TwinMeta)
+library(TwinEQTL)
 
 ## Model parameters
 
@@ -76,7 +76,7 @@ Ncvrt = 1
 ACEparam = c(3,4,5)
 
 # Simulate the data
-sim = TwinMeta_simulate(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = ACEparam)
+sim = TwinEQTL_simulate(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = ACEparam)
 
 # Perform ACE model estimation
 ace = EstimateACE_SqD(gene = sim$gene, cvrt = sim$cvrt, twininfo = sim$twininfo)

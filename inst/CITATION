@@ -1,11 +1,11 @@
-citHeader("To cite the 'TwinMeta' package in publications use:")
+citHeader("To cite the 'TwinEQTL' package in publications use:")
 
 citEntry(entry="article",
-         title = "TwinMeta: Fast and Powerful Association Analysis for eQTL and GWAS in Twin Studies",
+         title = "TwinEQTL: Ultra Fast and Powerful Association Analysis for eQTL and GWAS in Twin Studies",
          author = personList(as.person("Kai Xia"),as.person("Andrey A. Shabalin"),as.person("others")),
          address  = "University of North Carolina at Chapel Hill",
          year     = "2021",
          journal  = "submitted",
-         url      = "https://github.com/andreyshabalin/TwinMeta",
-         textVersion = "TwinMeta: Fast and Powerful Association Analysis for eQTL and GWAS in Twin Studies"
+         url      = "https://github.com/andreyshabalin/TwinEQTL",
+         textVersion = "TwinEQTL: Ultra Fast and Powerful Association Analysis for eQTL and GWAS in Twin Studies"
 )

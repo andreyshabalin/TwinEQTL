@@ -245,7 +245,7 @@ EstimateACE_SqD = function(gene, cvrt, twininfo){
 }
 
 # Generate artificial data set for testing the package
-TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, MAF = NULL){
+TwinEQTL_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, MAF = NULL){
 
     # Checks and defaults
     {
@@ -483,7 +483,7 @@ TwinMeta_simulate = function(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, M
 }
 
 # Main function for eQTL testing on twins
-TwinMeta_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
+TwinEQTL_testAll = function(gene, snps, cvrt, twininfo, pvthreshold){
     
     # Checks
     {

@@ -1,14 +1,14 @@
-\name{TwinMeta_simulate}
-\alias{TwinMeta_simulate}
+\name{TwinEQTL_simulate}
+\alias{TwinEQTL_simulate}
 \title{
 	Generate data for test running the package.
 }
 \description{
-	\code{TwinMeta_simulate} function creates artificial data set for test running
-	the main package function \code{\link{TwinMeta_testAll}}.
+	\code{TwinEQTL_simulate} function creates artificial data set for test running
+	the main package function \code{\link{TwinEQTL_testAll}}.
 }
 \usage{
-    TwinMeta_simulate(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, MAF = NULL)
+    TwinEQTL_simulate(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt, ACEparam = NULL, MAF = NULL)
 }
 \arguments{
 	\item{Nm}{Number of MZ twin pairs.}
@@ -37,11 +37,11 @@
 	Maintainer: Andrey A Shabalin <andrey.shabalin@gmail.com>
 }
 \references{
-	The package website: \url{https://github.com/andreyshabalin/TwinMeta}
+	The package website: \url{https://github.com/andreyshabalin/TwinEQTL}
 }
 \examples{
 
-library(TwinMeta)
+library(TwinEQTL)
 
 Nm = 1
 Nd = 2
@@ -51,7 +51,7 @@ Ngene = 10
 Nsnps = 10
 Ncvrt = 1
 
-sim = TwinMeta_simulate(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt)
+sim = TwinEQTL_simulate(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt)
 
 # Show gene expression data
 head(sim$gene)

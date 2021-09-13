@@ -1,8 +1,8 @@
-\name{TwinMeta-package}
-\alias{TwinMeta}
+\name{TwinEQTL-package}
+\alias{TwinEQTL}
 \docType{package}
 \title{
-        TwinMeta: Fast and Powerful Association Analysis 
+        TwinEQTL: Fast and Powerful Association Analysis 
         for eQTL and GWAS in Twin Studies
 }
 \description{
@@ -17,10 +17,10 @@
 	Maintainer: Andrey A Shabalin <andrey.shabalin@gmail.com>
 }
 \references{
-	The package website: \url{https://github.com/andreyshabalin/TwinMeta}
+	The package website: \url{https://github.com/andreyshabalin/TwinEQTL}
 }
 \keyword{ package }
-\keyword{ TwinMeta }
+\keyword{ TwinEQTL }
 \seealso{
-	See \code{\link{TwinMeta_testAll}} for reference and sample code.
+	See \code{\link{TwinEQTL_testAll}} for reference and sample code.
 }

@@ -1,14 +1,14 @@
-\name{TwinMeta_testAll}
-\alias{TwinMeta_testAll}
+\name{TwinEQTL_testAll}
+\alias{TwinEQTL_testAll}
 \title{
-	Main function for fast eQTL analysis of correlated samples in TwinMeta package.
+	Main function for fast eQTL analysis of correlated samples in TwinEQTL package.
 }
 \description{
-	\code{TwinMeta_testAll} function tests for association 
+	\code{TwinEQTL_testAll} function tests for association 
 	between every gene and every SNP in the input data.
 }
 \usage{
-    TwinMeta_testAll(gene, snps, cvrt, twininfo, pvthreshold)
+    TwinEQTL_testAll(gene, snps, cvrt, twininfo, pvthreshold)
 }
 \arguments{
     \item{gene}{
@@ -52,13 +52,13 @@
 	Maintainer: Andrey A Shabalin <andrey.shabalin@gmail.com>
 }
 \references{
-	The package website: \url{https://github.com/andreyshabalin/TwinMeta}
+	The package website: \url{https://github.com/andreyshabalin/TwinEQTL}
 }
 \seealso{
-	The code below is the sample code for TwinMeta analysis on artificial data.	
+	The code below is the sample code for TwinEQTL analysis on artificial data.	
 }
 \examples{
-library(TwinMeta)
+library(TwinEQTL)
 
 # Number of MZ twin pairs
 Nm = 1000
@@ -79,13 +79,13 @@ Nsnps = 1000
 Ncvrt = 10
 
 # Gerenate artificial data
-sim = TwinMeta_simulate( Nm, Nd, Ns, Ngene, Nsnps, Ncvrt)
+sim = TwinEQTL_simulate(Nm, Nd, Ns, Ngene, Nsnps, Ncvrt)
 
 # Pick a p-value threshold
 pvthreshold = 1000 / (Ngene * Nsnps)
 
 # Run eQTL analysis on the data with twins
-eqtls = TwinMeta_testAll(
+eqtls = TwinEQTL_testAll(
     gene = sim$gene,
     snps = sim$snps,
     cvrt = sim$cvrt,
